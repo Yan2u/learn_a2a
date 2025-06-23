@@ -1,0 +1,22 @@
+[project]
+name = "learn-a2a"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "a2a-sdk>=0.2.8",
+    "openai",
+    "requests",
+    "beautifulsoup4",
+    "lxml",
+    "uvicorn",
+    "dotenv",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
