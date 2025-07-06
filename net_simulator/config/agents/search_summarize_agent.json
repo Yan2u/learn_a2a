@@ -1,0 +1,70 @@
+{
+  "port": 8101,
+  "executor": "SearchSummaryExecutor",
+  "agent_card": {
+    "name": "Search and Summarize Agent",
+    "description": "An agent that performs web searches and summarizes the results in given format. User can input both image and plain text. Formats that supported: plain text, markdown, JSON, xml, csv.",
+    "url": "http://localhost:8101",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "application/json",
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "application/json",
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "search-text",
+        "name": "Search Text",
+        "description": "Searches the web for text and returns results in the specified format. This requires 1) search keywords, 2) format (text, markdown, JSON, xml, csv)",
+        "tags": [
+          "search",
+          "text",
+          "web",
+          "query"
+        ],
+        "inputModes": [
+          "text/plain",
+          "application/json"
+        ],
+        "outputModes": [
+          "text/plain",
+          "application/json"
+        ],
+        "examples": [
+          "Search 'google a2a' and return results in JSON format",
+          "Search 'deepseek-r1 0528', summarize the results in markdown format"
+        ]
+      },
+      {
+        "id": "search-image",
+        "name": "Search Image",
+        "description": "Searches the web for images and returns results in the specified format. This requires 1) additional prompts, 2) format (text, markdown, JSON, xml, csv) 3) image data (base64 encoded) in a FilePart.",
+        "tags": [
+          "search",
+          "image",
+          "web",
+          "query"
+        ],
+        "inputModes": [
+          "multipart/form-data",
+          "application/json"
+        ],
+        "outputModes": [
+          "text/plain",
+          "application/json"
+        ],
+        "examples": [
+          "Search and tell me what is the image about.",
+          "What is the painting style of this image? Search and tell me in JSON format."
+        ]
+      }
+    ],
+    "supportsAuthenticatedExtendedCard": false
+  }
+}

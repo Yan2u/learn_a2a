@@ -29,3 +29,7 @@ Agents:
 - User Agent: Call agents above to deal with user inputs. Both `text+image` and `audio+image` forms are accepted.
 
 For details, see `image_description/README.md`.
+
+#### network-simulator
+
+A simple simulated-network for multiple users and multiple agents. Still under development.

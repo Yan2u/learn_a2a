@@ -23,6 +23,17 @@ from dotenv import load_dotenv
 import os
 import base64
 from llm_chat import image_response
+import asyncio
+
+FAKE_RESPONSE = """This is a fake response for testing purposes.
+It only tests the comm framework of a2a."""
+
+
+async def iter_lines():
+    lines = FAKE_RESPONSE.split('\n')
+    for line in lines:
+        await asyncio.sleep(2)  # Simulate delay for streaming response
+        yield line + '\n'
 
 
 class ImageDescriptorExecutor(AgentExecutor):
@@ -59,6 +70,7 @@ class ImageDescriptorExecutor(AgentExecutor):
                                             new_agent_text_message(text=delta,
                                                                    context_id=context.context_id,
                                                                    task_id=context.task_id,))
+
         else:
             print(f"[ImageDescriptor] Invalid parts type.")
             await updater.update_status(TaskState.failed)

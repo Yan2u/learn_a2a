@@ -1,0 +1,42 @@
+{
+  "system": {
+    "port": 8080,
+    "keep_alive_threshold": 30,
+    "keep_alive_interval": 10
+  },
+  "proxy": {
+    "enabled": true,
+    "use": "ssh",
+    "ssh": "http://127.0.0.1:7890",
+    "wsl": "http://172.31.64.1:7890"
+  },
+  "api_services": {
+    "openai": {
+      "api_key": "<yours>",
+      "base_url": "https://openai.wndbac.cn/v1",
+      "model": "gpt-4o"
+    },
+    "gemini": {
+      "api_key": "<yours>",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "model": "gemini-2.5-flash-lite-preview-06-17"
+    },
+    "silicon-flow": {
+      "api_key": "<yours>",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "Qwen/Qwen3-30B-A3B"
+    },
+    "silicon-flow-vision": {
+      "api_key": "<yours>",
+      "base_url": "https://api.siliconflow.cn/v1",
+      "model": "Pro/Qwen/Qwen2.5-VL-7B-Instruct",
+      "tools": false
+    }
+  },
+  "api_service": "gemini",
+  "langsearch_api_key": "<yours>",
+  "mcp": {
+    "langsearch_port": 8081,
+    "agent_discover_port": 8082
+  }
+}

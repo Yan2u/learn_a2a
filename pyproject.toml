@@ -12,6 +12,9 @@ dependencies = [
     "lxml",
     "uvicorn",
     "dotenv",
+    "google-genai",
+    "fastapi[all]",
+    "fastmcp"
 ]
 
 [tool.hatch.build.targets.wheel]

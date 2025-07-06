@@ -32,7 +32,7 @@ async def search(query: str, num_results: int = 20) -> List[Dict[str, Any]]:
     Returns:
         一个包含搜索结果的列表，每个结果是一个字典。
     """
-    search_url = f"https://www.bing.com/search?q={query}"
+    search_url = f"https://www.cn.bing.com/search?q={query}"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }

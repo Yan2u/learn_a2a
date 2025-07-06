@@ -134,7 +134,7 @@ class OrchestratorExecutor(AgentExecutor):
 class OrchestratorAgent:
 
     def run(self, port: int):
-        url = f'http://0.0.0.0:{port}'
+        url = f'http://127.0.0.1:{port}'
         skill = AgentSkill(
             id='search_and_summarize',
             name='Search and summarize results',

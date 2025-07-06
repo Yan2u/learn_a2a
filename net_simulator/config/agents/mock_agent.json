@@ -1,0 +1,42 @@
+{
+    "port": 8100,
+    "executor": "MockExecutor",
+    "agent_card": {
+        "name": "Mock Agent",
+        "description": "An agent for debug and test just simply returns 10 messages in progress and exits.",
+        "url": "http://localhost:8100",
+        "version": "0.1.0",
+        "capabilities": {
+            "streaming": true
+        },
+        "defaultInputModes": [
+            "application/json",
+            "text/plain"
+        ],
+        "defaultOutputModes": [
+            "application/json",
+            "text/plain"
+        ],
+        "skills": [
+            {
+                "id": "mock-text",
+                "name": "Mock Text",
+                "description": "Simply returns 10 pieces of text.",
+                "tags": [
+                    "test",
+                    "text",
+                    "mock"
+                ],
+                "inputModes": [
+                    "text/plain",
+                    "application/json"
+                ],
+                "outputModes": [
+                    "text/plain",
+                    "application/json"
+                ]
+            }
+        ],
+        "supportsAuthenticatedExtendedCard": false
+    }
+}

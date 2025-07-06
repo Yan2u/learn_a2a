@@ -1,8 +1,8 @@
 import uvicorn
-
+import httpx
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import InMemoryTaskStore
+from a2a.server.tasks import InMemoryTaskStore, InMemoryPushNotifier
 from a2a.types import (
     AgentCapabilities,
     AgentCard,
@@ -17,7 +17,7 @@ import json
 
 from a2a.client import A2ACardResolver, A2AClient
 
-from a2a.utils import new_agent_text_message
+from a2a.utils import new_agent_text_message, new_task
 
 from dotenv import load_dotenv
 import os
@@ -30,20 +30,35 @@ class SearcherExecutor(AgentExecutor):
         pass
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        updater = TaskUpdater(event_queue, context.task_id, context.context_id)
-        if not context.current_task:
-            await updater.update_status(TaskState.submitted)
-        await updater.update_status(TaskState.working)
-        texts = [x.root.text for x in context.message.parts if isinstance(x.root, TextPart)]
-        print(texts)
-        msg = ' '.join(texts)
+        task = context.current_task
+        if not task:
+            task = new_task(context.message)
+            await event_queue.enqueue_event(task)
 
-        result = await bing_searcher.search(msg)
+        updater = TaskUpdater(event_queue, task.id, task.contextId)
+        query = context.get_user_input(delimiter=' ')
+        print(query)
+
+        await updater.start_work(new_agent_text_message(
+            text='Starting search for: ' + query,
+            context_id=context.context_id,
+            task_id=context.task_id
+        ))
+
+        result = await bing_searcher.search(query.replace(' ', '+'))
         if not result:
-            await updater.update_status(TaskState.failed)
+            await updater.failed(new_agent_text_message(
+                text='No results found for: ' + query,
+                context_id=context.context_id,
+                task_id=context.task_id
+            ))
             return
-        await updater.update_status(TaskState.completed)
-        await event_queue.enqueue_event(new_agent_text_message(text=json.dumps(result)))
+        await updater.add_artifact(
+            name='Search Results',
+            parts=[TextPart(text=json.dumps(result, indent=2))],
+        )
+        await updater.complete()
+        print(f"Completed search for: {query}")
 
     async def cancel(
         self, context: RequestContext, event_queue: EventQueue
@@ -54,7 +69,7 @@ class SearcherExecutor(AgentExecutor):
 class SearcherAgent:
 
     def run(self, port: int):
-        url = f'http://0.0.0.0:{port}'
+        url = f'http://127.0.0.1:{port}'
         skill = AgentSkill(
             id='search',
             name='Search https://bing.com/ for given query',
@@ -77,7 +92,8 @@ class SearcherAgent:
 
         request_handler = DefaultRequestHandler(
             agent_executor=SearcherExecutor(),
-            task_store=InMemoryTaskStore()
+            task_store=InMemoryTaskStore(),
+            push_notifier=InMemoryPushNotifier(httpx.AsyncClient())
         )
 
         server = A2AStarletteApplication(

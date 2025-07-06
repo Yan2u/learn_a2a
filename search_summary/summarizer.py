@@ -1,3 +1,5 @@
+import logging
+
 import uvicorn
 
 from a2a.server.apps import A2AStarletteApplication
@@ -19,7 +21,7 @@ import json
 
 from a2a.client import A2ACardResolver, A2AClient
 
-from a2a.utils import new_agent_text_message
+from a2a.utils import new_agent_text_message, new_task
 
 import os
 from dotenv import load_dotenv
@@ -41,30 +43,39 @@ class SummarizerExecutor(AgentExecutor):
         pass
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
-        updater = TaskUpdater(event_queue, context.task_id, context.context_id)
-        if not context.current_task:
-            await updater.update_status(TaskState.submitted)
+        task = context.current_task
+        if not task:
+            task = new_task(context.message)
+            await event_queue.enqueue_event(task)
+
+        updater = TaskUpdater(event_queue, task.id, task.contextId)
+        await updater.start_work(new_agent_text_message(
+            text='Starting summarization',
+            context_id=context.context_id,
+            task_id=context.task_id
+        ))
 
         query = context.get_user_input()
+        logger = logging.getLogger('uvicorn')
+
         try:
-            async for chunk in llm_chat.get_llm_response_stream(
+            result = await llm_chat.get_llm_response(
                 system_prompt=SYSTEM_PROMPT,
-                user_prompt=query
-            ):
-                if chunk:
-                    await updater.update_status(
-                        TaskState.working,
-                        new_agent_text_message(
-                            text=chunk,
-                            context_id=context.context_id,
-                            task_id=context.task_id,
-                        )
-                    )
+                user_prompt=query,
+            )
+
+            logger.info('Summarization finished successfully')
+            await updater.add_artifact(
+                name='Summary',
+                parts=[TextPart(text=result)],
+            )
+            await updater.complete()
         except Exception as e:
+            logger.error(f'Error during summarization: {e}')
             raise ServerError(error=InternalError()) from e
 
     async def cancel(
-        self, context: RequestContext, event_queue: EventQueue
+            self, context: RequestContext, event_queue: EventQueue
     ) -> None:
         raise Exception('cancel not supported')
 
@@ -72,7 +83,7 @@ class SummarizerExecutor(AgentExecutor):
 class SummarizerAgent:
 
     def run(self, port: int):
-        url = f'http://0.0.0.0:{port}'
+        url = f'http://127.0.0.1:{port}'
         skill = AgentSkill(
             id='summarize',
             name='Summarize search results in markdown format',
