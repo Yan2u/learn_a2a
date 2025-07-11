@@ -33,15 +33,18 @@ PROMPT = 'What is in this picture? Please describe it in detail.'
 async def test_image_descriptor():
     load_dotenv()
 
-    image_descriptor_httpx = httpx.AsyncClient(base_url=f"http://localhost:{os.getenv('IMAGE_DESCRIPTOR_PORT', 8003)}", timeout=360)
+    image_descriptor_httpx = httpx.AsyncClient(
+        base_url=f"http://localhost:{os.getenv('IMAGE_DESCRIPTOR_PORT', 8003)}", timeout=1800)
     image_descriptor_card = await A2ACardResolver(httpx_client=image_descriptor_httpx, base_url=f"http://localhost:{os.getenv('IMAGE_DESCRIPTOR_PORT', 8003)}").get_agent_card()
-    image_descriptor_client = A2AClient(httpx_client=image_descriptor_httpx, agent_card=image_descriptor_card)
+    image_descriptor_client = A2AClient(
+        httpx_client=image_descriptor_httpx, agent_card=image_descriptor_card)
 
     message_dict = {
         'message': {
             'role': 'user',
             'parts': [
-                {'kind': 'file', 'file': {'bytes': base64.b64encode(open('test.jpg', 'rb').read()).decode('utf-8')}},
+                {'kind': 'file', 'file': {'bytes': base64.b64encode(
+                    open('test.jpg', 'rb').read()).decode('utf-8')}},
                 {'kind': 'text', 'text': 'jpg'},
                 {'kind': 'text', 'text': 'Describe this image in detail.'}
             ],
@@ -58,21 +61,25 @@ async def test_image_descriptor():
 
     async for chunk in response:
         if chunk.root.result.status.message:
-            print(chunk.root.result.status.message.parts[0].root.text, end='', flush=True)
+            print(
+                chunk.root.result.status.message.parts[0].root.text, end='', flush=True)
 
 
 async def test_speech2text():
     load_dotenv()
 
-    speech2text_httpx = httpx.AsyncClient(base_url=f"http://localhost:{os.getenv('SPEECH2TEXT_PORT', 8004)}", timeout=360)
+    speech2text_httpx = httpx.AsyncClient(
+        base_url=f"http://localhost:{os.getenv('SPEECH2TEXT_PORT', 8004)}", timeout=1800)
     speec2text_card = await A2ACardResolver(httpx_client=speech2text_httpx, base_url=f"http://localhost:{os.getenv('SPEECH2TEXT_PORT', 8004)}").get_agent_card()
-    speech2text_client = A2AClient(httpx_client=speech2text_httpx, agent_card=speec2text_card)
+    speech2text_client = A2AClient(
+        httpx_client=speech2text_httpx, agent_card=speec2text_card)
 
     message_dict = {
         'message': {
             'role': 'user',
             'parts': [
-                {'kind': 'file', 'file': {'bytes': base64.b64encode(open('test.wav', 'rb').read()).decode('utf-8')}},
+                {'kind': 'file', 'file': {'bytes': base64.b64encode(
+                    open('test.wav', 'rb').read()).decode('utf-8')}},
             ],
             'messageId': uuid4().hex,
         }
@@ -101,10 +108,11 @@ async def main():
 
     user_agent_httpx = httpx.AsyncClient(
         base_url=f"http://localhost:{os.getenv('USER_PORT', 8005)}",
-        timeout=360
+        timeout=1800
     )
     user_agent_card = await A2ACardResolver(httpx_client=user_agent_httpx, base_url=f"http://localhost:{os.getenv('USER_PORT', 8005)}").get_agent_card()
-    user_agent_client = A2AClient(httpx_client=user_agent_httpx, agent_card=user_agent_card)
+    user_agent_client = A2AClient(
+        httpx_client=user_agent_httpx, agent_card=user_agent_card)
 
     img_b64 = base64.b64encode(open('test.jpg', 'rb').read()).decode('utf-8')
 
@@ -126,7 +134,8 @@ async def main():
     stream = user_agent_client.send_message_streaming(message)
     async for chunk in stream:
         if chunk.root.result.status.message:
-            print(chunk.root.result.status.message.parts[0].root.text, end='', flush=True)
+            print(
+                chunk.root.result.status.message.parts[0].root.text, end='', flush=True)
 
     print('\n\n[TestClient] Using audio prompt:', flush=True)
     wav_b64 = base64.b64encode(open('test.wav', 'rb').read()).decode('utf-8')

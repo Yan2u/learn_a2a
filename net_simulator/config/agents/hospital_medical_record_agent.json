@@ -1,0 +1,47 @@
+{
+  "port": 8401,
+  "executor": "MedialRecordExecutor",
+  "category": "Hospital System",
+  "agent_card": {
+    "name": "Medical Record",
+    "description": "A hospital staff agent responsible for managing patient medical records. Handles retrieval and updating of medical records using patient medical record IDs, provides key information summaries for diagnostic processes, and generates new medical record IDs for new patients.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "manage-medical-records",
+        "name": "Manage Medical Records",
+        "description": "Manages patient medical records by retrieving existing records using medical record IDs, updating patient information, and creating new medical records for new patients. Provides brief summaries and extracts key information to support efficient diagnosis processes.",
+        "tags": [
+          "medical-records",
+          "patient-data",
+          "hospital-management",
+          "medical-information",
+          "record-keeping"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Retrieve medical records for patient ID MR123456 and provide summary",
+          "Update medical records for patient with new diagnosis and treatment information",
+          "Create new medical record for first-time patient and generate medical record ID"
+        ]
+      }
+    ],
+    "supportsAuthenticatedExtendedCard": false
+  },
+  "expose": false,
+  "visible_to": null
+}

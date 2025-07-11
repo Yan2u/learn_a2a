@@ -1,0 +1,43 @@
+{
+  "port": 8306,
+  "executor": "PediatricianExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Pediatrician",
+    "description": "An agent that acts as a Pediatrician, specializing in the care of infants, children, and adolescents. Provides friendly, reassuring, and safety-focused advice on childhood illnesses, development, and preventive care. Always includes a disclaimer that advice is not a substitute for direct medical care from a pediatrician.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_pediatrician_questions",
+        "name": "Answer Pediatrician Questions",
+        "description": "Answers questions about child health, development, and common pediatric illnesses as a Pediatrician. Always includes a disclaimer that advice is not a substitute for direct pediatric care.",
+        "tags": [
+          "pediatrician",
+          "medical",
+          "child health"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are the signs of dehydration in a toddler?",
+          "How often should a child receive vaccinations?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

@@ -1,0 +1,43 @@
+{
+  "port": 8205,
+  "executor": "PhysicsScholarExecutor",
+  "category": "Scholar",
+  "agent_card": {
+    "name": "Physics",
+    "description": "An agent that independently searches and integrates information to answer academic questions in the field of physics. It provides logical, structured answers and can collaborate with other academic agents if needed. If the question is outside physics, it will inform the user.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_physics_questions",
+        "name": "Answer Physics Questions",
+        "description": "Answers academic questions in physics by searching and integrating relevant information. If the question is outside physics, the agent will inform the user.",
+        "tags": [
+          "physics",
+          "academic",
+          "qa"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Explain the concept of quantum entanglement.",
+          "What is the theory of relativity?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

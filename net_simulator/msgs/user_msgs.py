@@ -9,6 +9,7 @@ class UserRegisterRequest(BaseModel):
     This class can be extended to include additional fields as needed.
     """
     user_id: str
+    user_name: str
 
 
 class UserChatRequest(BaseModel):

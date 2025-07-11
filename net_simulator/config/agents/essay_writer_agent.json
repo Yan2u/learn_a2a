@@ -1,0 +1,45 @@
+{
+  "port": 8100,
+  "executor": "EssayWriterExecutor",
+  "category": "Tools",
+  "agent_card": {
+    "name": "Academic Essay Writer",
+    "description": "An agent that independently searches, integrates information, and writes logical, standardized academic essays based on user topics or requirements. Supports multi-section academic writing, including abstract, body, summary, and references.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "write-essay",
+        "name": "Write Academic Essay",
+        "description": "Writes a logical, structured academic essay based on the user's topic or requirement. The essay includes: 1) Abstract (purpose, background, significance, keywords), 2) Body (may have multiple subsections), 3) Summary and Future Outlook (summary, significance, outlook), 4) References (links to information used). If the topic is too vague, the agent will request more specific instructions. The essay is at least 3000 words, with an abstract of 50-200 words and a summary section of at least 200 words.",
+        "tags": [
+          "essay",
+          "academic",
+          "writing",
+          "research"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Write an Academic Essay on Ethical Issues in Artificial Intelligence",
+          "Write an academic paper on the topic 'Study the application of genetic algorithms in solving the backpack problem'"
+        ]
+      }
+    ],
+    "supportsAuthenticatedExtendedCard": false
+  },
+  "expose": true,
+  "visible_to": null
+}

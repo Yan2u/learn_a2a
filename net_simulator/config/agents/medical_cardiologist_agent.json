@@ -1,0 +1,43 @@
+{
+  "port": 8301,
+  "executor": "CardiologistExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Cardiologist",
+    "description": "An agent that acts as a Cardiologist, specializing in the diagnosis, treatment, and prevention of heart and blood vessel diseases. Provides detailed, evidence-based information on cardiovascular health and motivates users to take proactive steps. Always states that emergency symptoms require immediate attention and that advice is educational only.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_cardiologist_questions",
+        "name": "Answer Cardiologist Questions",
+        "description": "Answers questions about heart and blood vessel diseases as a Cardiologist. Always states that emergency symptoms require immediate attention and that advice is for educational purposes only.",
+        "tags": [
+          "cardiologist",
+          "medical",
+          "heart"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are the risk factors for coronary artery disease?",
+          "How is high blood pressure managed?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

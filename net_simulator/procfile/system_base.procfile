@@ -1,0 +1,2 @@
+system: uv run nodes/system_server.py
+search: uv run mcp/langsearch.py

@@ -6,6 +6,7 @@ from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
 from a2a.types import TextPart, FilePart, FileWithBytes, TaskStatusUpdateEvent, TaskState
 from a2a.utils import new_task, new_agent_text_message
+import httpx
 
 from net_simulator.executors.executor_base import ExecutorBase
 from net_simulator.utils import OpenAIService, SiliconFlowService, get_config, get_llm
@@ -95,9 +96,6 @@ Among them.
 
 class SearchSummaryExecutor(ExecutorBase):
 
-    def __init__(self):
-        super().__init__()
-
     def _extract_response(self, resp: str) -> str:
         if '```' in resp:
             start_idx = resp.find('{')
@@ -117,8 +115,10 @@ class SearchSummaryExecutor(ExecutorBase):
         if not task:
             task = new_task(context.message)
             await event_queue.enqueue_event(task)
+            await self._post_task_start()
 
-        messages = self.task_messages.get(task.id, [{'role': 'system', 'content': SYSTEM_PROMPT}])
+        messages = self.task_messages.get(
+            task.id, [{'role': 'system', 'content': SYSTEM_PROMPT}])
 
         user_input = context.get_user_input(delimiter='\n')
         self.logger.info(f'User input: {user_input}')
@@ -158,8 +158,10 @@ class SearchSummaryExecutor(ExecutorBase):
             messages, choice = await llm.send_message_mcp(messages,
                                                           f"http://localhost:{get_config('mcp.langsearch_port')}/sse")
             self.task_messages[task.id] = messages
-            choice.message.content = self._extract_response(choice.message.content)
-            self.logger.info(f"Task({task.id}) response: {choice.message.content}")
+            choice.message.content = self._extract_response(
+                choice.message.content)
+            self.logger.info(
+                f"Task({task.id}) response: {choice.message.content[:100]}...")
             result = json.loads(choice.message.content)
             if result['status'] == 'ok':
                 self.logger.info(f"Task({task.id}) ok")
@@ -188,7 +190,8 @@ class SearchSummaryExecutor(ExecutorBase):
                     )
                 )
             else:
-                self.logger.warning(f"Task({task.id}) unknown result type {result['status']}")
+                self.logger.warning(
+                    f"Task({task.id}) unknown result type {result['status']}")
                 await updater.failed(
                     new_agent_text_message(
                         text='Invalid response from the model. Please try again later.',
@@ -206,7 +209,8 @@ class SearchSummaryExecutor(ExecutorBase):
                     context_id=task.contextId,
                 )
             )
-            return
+
+        await self._post_task_end()
 
     async def cancel(
             self, context: RequestContext, event_queue: EventQueue

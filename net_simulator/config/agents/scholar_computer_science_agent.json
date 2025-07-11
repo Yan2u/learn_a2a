@@ -1,0 +1,43 @@
+{
+  "port": 8201,
+  "executor": "ComputerScienceScholarExecutor",
+  "category": "Scholar",
+  "agent_card": {
+    "name": "Computer Science",
+    "description": "An agent that independently searches and integrates information to answer academic questions in the field of computer science. It provides logical, structured answers and can collaborate with other academic agents if needed. If the question is outside computer science, it will inform the user.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_computer_science_questions",
+        "name": "Answer Computer Science Questions",
+        "description": "Answers academic questions in computer science by searching and integrating relevant information. If the question is outside computer science, the agent will inform the user.",
+        "tags": [
+          "computer science",
+          "academic",
+          "qa"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Explain the concept of Turing machines.",
+          "What is the difference between supervised and unsupervised learning?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

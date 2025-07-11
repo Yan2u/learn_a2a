@@ -1,0 +1,3 @@
+system: uv run nodes/system_server.py
+search_summary_agent: sleep 1 && uv run nodes/public_agent.py -a search_summarize_agent
+mcp_langsearch: uv run mcp/langsearch.py

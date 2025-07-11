@@ -1,0 +1,14 @@
+system: uv run nodes/system_server.py
+hos_outpatient: sleep 1 && uv run nodes/public_agent.py -a hospital_outpatient_agent
+hos_medrec: sleep 1 && uv run nodes/public_agent.py -a hospital_medical_record_agent
+hos_inventory: sleep 1 && uv run nodes/public_agent.py -a hospital_drug_inventory_agent
+hos_spechost: sleep 1 && uv run nodes/public_agent.py -a hospital_specialist_host_agent
+spec_internist: sleep 1 && uv run nodes/public_agent.py -a medical_internist_agent
+spec_pediatrician: sleep 1 && uv run nodes/public_agent.py -a medical_pediatrician_agent
+spec_dermatologist: sleep 1 && uv run nodes/public_agent.py -a medical_dermatologist_agent
+spec_obstetrician: sleep 1 && uv run nodes/public_agent.py -a medical_obstetrician_agent
+spec_cardiologist: sleep 1 && uv run nodes/public_agent.py -a medical_cardiologist_agent
+spec_endocrinologist: sleep 1 && uv run nodes/public_agent.py -a medical_endocrinologist_agent
+spec_orthopedist: sleep 1 && uv run nodes/public_agent.py -a medical_orthopedist_agent
+mcp_medicrec: uv run mcp/medical_record.py
+mcp_druginv: uv run mcp/drug_inventory.py

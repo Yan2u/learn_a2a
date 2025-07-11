@@ -1,0 +1,43 @@
+{
+  "port": 8202,
+  "executor": "EconomicsScholarExecutor",
+  "category": "Scholar",
+  "agent_card": {
+    "name": "Economics",
+    "description": "An agent that independently searches and integrates information to answer academic questions in the field of economics. It provides logical, structured answers and can collaborate with other academic agents if needed. If the question is outside economics, it will inform the user.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_economics_questions",
+        "name": "Answer Economics Questions",
+        "description": "Answers academic questions in economics by searching and integrating relevant information. If the question is outside economics, the agent will inform the user.",
+        "tags": [
+          "economics",
+          "academic",
+          "qa"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Explain the concept of supply and demand.",
+          "What is Keynesian economics?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

@@ -41,17 +41,19 @@ class UserExecutor(AgentExecutor):
         speech2text_url = f"http://localhost:{os.getenv('SPEECH2TEXT_PORT', 8004)}"
         self.image_descriptor_httpx = httpx.AsyncClient(
             base_url=image_descriptor_url,
-            timeout=360
+            timeout=1800
         )
         image_descriptor_card = await A2ACardResolver(httpx_client=self.image_descriptor_httpx, base_url=image_descriptor_url).get_agent_card()
-        self.image_descriptor_client = A2AClient(httpx_client=self.image_descriptor_httpx, agent_card=image_descriptor_card)
+        self.image_descriptor_client = A2AClient(
+            httpx_client=self.image_descriptor_httpx, agent_card=image_descriptor_card)
 
         self.speech2text_httpx = httpx.AsyncClient(
             base_url=speech2text_url,
-            timeout=360
+            timeout=1800
         )
         speech2text_card = await A2ACardResolver(httpx_client=self.speech2text_httpx, base_url=speech2text_url).get_agent_card()
-        self.speech2text_client = A2AClient(httpx_client=self.speech2text_httpx, agent_card=speech2text_card)
+        self.speech2text_client = A2AClient(
+            httpx_client=self.speech2text_httpx, agent_card=speech2text_card)
 
     async def image_desc(self, updater: TaskUpdater, context: RequestContext, prompt: str, img_bytes: str):
         if self.image_descriptor_client is None:
@@ -81,7 +83,8 @@ class UserExecutor(AgentExecutor):
             params=MessageSendParams(**message_dict)
         )
 
-        stream = self.image_descriptor_client.send_message_streaming(message, http_kwargs={'timeout': 360})
+        stream = self.image_descriptor_client.send_message_streaming(
+            message, http_kwargs={'timeout': 360})
 
         try:
             async for chunk in stream:

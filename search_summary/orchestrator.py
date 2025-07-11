@@ -33,14 +33,18 @@ class OrchestratorExecutor(AgentExecutor):
 
     async def initialize_agents(self):
         searcher_url = f'http://localhost:{os.getenv("SEARCHER_PORT", 8000)}'
-        self.searcher_httpx_client = httpx.AsyncClient(base_url=searcher_url, timeout=360)
+        self.searcher_httpx_client = httpx.AsyncClient(
+            base_url=searcher_url, timeout=1800)
         searcher_card = await A2ACardResolver(httpx_client=self.searcher_httpx_client, base_url=searcher_url).get_agent_card()
-        self.searcher_client = A2AClient(httpx_client=self.searcher_httpx_client, agent_card=searcher_card)
+        self.searcher_client = A2AClient(
+            httpx_client=self.searcher_httpx_client, agent_card=searcher_card)
 
         summarizer_url = f'http://localhost:{os.getenv("SUMMARIZER_PORT", 8001)}'
-        self.summarizer_httpx_client = httpx.AsyncClient(base_url=summarizer_url, timeout=360)
+        self.summarizer_httpx_client = httpx.AsyncClient(
+            base_url=summarizer_url, timeout=1800)
         summarizer_card = await A2ACardResolver(httpx_client=self.summarizer_httpx_client, base_url=summarizer_url).get_agent_card()
-        self.summarizer_client = A2AClient(httpx_client=self.summarizer_httpx_client, agent_card=summarizer_card)
+        self.summarizer_client = A2AClient(
+            httpx_client=self.summarizer_httpx_client, agent_card=summarizer_card)
 
     async def execute(self, context: RequestContext, event_queue: EventQueue):
         if self.searcher_client is None:
@@ -54,7 +58,8 @@ class OrchestratorExecutor(AgentExecutor):
             context_id=context.context_id,
             task_id=context.task_id
         ))
-        texts = [x.root.text for x in context.message.parts if isinstance(x.root, TextPart)]
+        texts = [x.root.text for x in context.message.parts if isinstance(
+            x.root, TextPart)]
         print(texts)
         msg = ' '.join(texts)
 
@@ -95,7 +100,8 @@ class OrchestratorExecutor(AgentExecutor):
             'message': {
                 'role': 'user',
                 'parts': [
-                    {'kind': 'text', 'text': response.root.result.parts[0].root.text}
+                    {'kind': 'text',
+                        'text': response.root.result.parts[0].root.text}
                 ],
                 'messageId': uuid4().hex,
             },
@@ -106,7 +112,8 @@ class OrchestratorExecutor(AgentExecutor):
             params=MessageSendParams(**summarizer_message)
         )
 
-        response = self.summarizer_client.send_message_streaming(summarizer_req)
+        response = self.summarizer_client.send_message_streaming(
+            summarizer_req)
 
         async for chunk in response:
             if chunk.root.result.status.message:

@@ -1,0 +1,43 @@
+{
+  "port": 8204,
+  "executor": "ChemistryScholarExecutor",
+  "category": "Scholar",
+  "agent_card": {
+    "name": "Chemistry",
+    "description": "An agent that independently searches and integrates information to answer academic questions in the field of chemistry. It provides logical, structured answers and can collaborate with other academic agents if needed. If the question is outside chemistry, it will inform the user.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_chemistry_questions",
+        "name": "Answer Chemistry Questions",
+        "description": "Answers academic questions in chemistry by searching and integrating relevant information. If the question is outside chemistry, the agent will inform the user.",
+        "tags": [
+          "chemistry",
+          "academic",
+          "qa"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Explain the periodic table of elements.",
+          "What is a covalent bond?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

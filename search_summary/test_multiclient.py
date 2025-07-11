@@ -46,7 +46,7 @@ SEARCH_KEYWORDS = [
 
 async def client_task(keyword: str = ''):
     async with httpx.AsyncClient(base_url=f"http://localhost:{os.getenv('SEARCHER_PORT', 8001)}",
-                                 timeout=360) as client:
+                                 timeout=1800) as client:
         searcher_card = await A2ACardResolver(httpx_client=client,
                                               base_url=f"http://localhost:{os.getenv('SEARCHER_PORT', 8001)}").get_agent_card()
         searcher_client = A2AClient(

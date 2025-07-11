@@ -1,5 +1,6 @@
 from typing import List
 
+from fastmcp import Context
 import requests
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError

@@ -1,75 +1,40 @@
 import asyncio
-from contextlib import asynccontextmanager
 import logging
 import time
-from typing import Any, Dict, List, Literal, Tuple
+import traceback
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any, Dict, List, Literal, Tuple, TypeVar
+from uuid import uuid4
 
 import fastapi
-from pydantic import BaseModel
 import uvicorn
+from a2a.types import (Artifact, Task, TaskArtifactUpdateEvent,
+                       TaskStatusUpdateEvent)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastmcp.client.transports import PythonStdioTransport
+from numpy import vsplit
+from pydantic import BaseModel
 
-from net_simulator.msgs import (ErrorResponse, ResponseT,
-                                TextResponse, UserChatRequest,
+from net_simulator.datamodels import (AgentInteraction, PublicAgentNode,
+                                      StampedTask, UserAgentNode)
+from net_simulator.msgs import (AgentInteractionAddRequest,
+                                AgentKeepAliveRequest, AgentRegistryInfo,
+                                AgentRegistryRequest, AgentRegistryResponse,
+                                AgentTaskCountAddRequest, ErrorResponse,
+                                ResponseT, TextResponse, UserChatRequest,
                                 UserConversationsResponse, UserMessageResponse,
-                                UserRegisterRequest, AgentRegistryRequest, AgentRegistryResponse, AgentKeepAliveRequest, AgentRegistryInfo,
-                                AgentInteractionAddRequest, AgentTaskCountAddRequest)
+                                UserRegisterRequest, AgentInteractionDeleteRequest)
+from net_simulator.utils import (OpenAIService, SiliconFlowService, get_config,
+                                 get_llm)
 
-from net_simulator.utils import OpenAIService, SiliconFlowService, get_config, get_llm
-from a2a.types import Task, TaskStatusUpdateEvent, TaskArtifactUpdateEvent, Artifact
+CWD = Path(__file__).parent
+ROLE = get_config('system.role')
+CONFIG_ROOT = CWD.parent / 'config'
 
-from uuid import uuid4
-
-SYSTEM_PROMPT = """Now you are a personal assistant for users. Your responsibility is: for the needs put forward by users, use the Agent Service tool to discover, find and decide on suitable Agents in the Agent Network to handle users' work. If the user's needs are relatively complex, you may need to divide the task and call multiple Agents to complete this task.
-
-**The role you play is "the organizer of the team and the planner of the task".**
-
-**Please keep in mind: in principle, you cannot handle the user's needs by yourself. Instead, you need to analyze the user's needs, combine the existing Agents in the Agent Network, and send messages to them to complete the task put forward by the user.**
-
-**Wht you cannot do is**
-
-- Directly handle the user's needs or directly answer the user's questions;
-- Try to solve the problem by yourself when there is no Agent in the Agent Network who can do the job;
-
-**What you need to do is**
-
-- Find a suitable Agent for the user's needs and send a message to him (through the Agent Service tool) to solve it;
-- If the user's needs are relatively complex, you need to arrange a set of task processing processes, that is, consider how to call multiple Agents and synthesize their results to meet the user's needs.
-- If there is no Agent in the Agent Network that can meet the user's needs, you need to honestly explain to the user and ask the user to change the needs.
-"""
-
-
-class AgentNetNode(BaseModel):
-    """
-    Represents a node in the agent network.
-    """
-
-    interactions: List[str] = []
-    kind: str
-
-
-class PublicAgentNode(AgentNetNode):
-    """
-    Represents a public agent node in the agent network.
-    """
-
-    kind: Literal['public'] = 'public'
-    task_count: int = 0
-    url: str
-    lastseen: float
-    name: str
-
-
-class UserAgentNode(AgentNetNode):
-    """
-    Represents a user agent node in the agent network.
-    """
-
-    kind: Literal['user'] = 'user'
-    conversations: Dict[str, List[Dict[str, Any]]]
-    tasks: Dict[str, Task]
+SYSTEM_PROMPT = (CONFIG_ROOT / 'user_agent_prompts' /
+                 f"{ROLE}.txt").read_text()
 
 
 KEEP_ALIVE_THRESHOLD = get_config('system.keep_alive_threshold')  # seconds
@@ -134,6 +99,10 @@ def main():
             name=request.name,
             url=request.url,
             lastseen=time.time(),
+            category=request.category,
+            tasks={},
+            expose=request.expose,
+            visible_to=request.visible_to
         )
 
         logger.info(f"Agent({agent_id}) registered.")
@@ -162,6 +131,33 @@ def main():
         graph[request.agent_id].lastseen = time.time()
         logger.info(f"Agent({request.agent_id}) keep-alive.")
         return TextResponse(content='OK')
+
+    @app.post('/agents/discover')
+    def discover_agents(request: AgentKeepAliveRequest) -> ResponseT[List[AgentRegistryInfo]]:
+        """
+        Discover public agents registered with the manager.
+        This is used to find available agents for interaction.
+        """
+
+        result = []
+        if request.agent_id not in graph:
+            logger.error(f"Invalid request with ID {request.agent_id}.")
+            return ErrorResponse(
+                message=f"Invalid request with ID {request.agent_id}.",
+            )
+        current_agent = graph[request.agent_id]
+        for agent_id, agent in graph.items():
+            if agent.kind != 'public':
+                continue
+            is_visible = agent.expose and ((agent.visible_to is None) or current_agent.category in agent.visible_to)
+            if is_visible or agent.category == current_agent.category:
+                result.append(AgentRegistryInfo(
+                    agent_id=agent_id,
+                    name=agent.name,
+                    url=agent.url,
+                ))
+
+        return ResponseT(content=result)
 
     @app.get('/agents/all', status_code=200)
     def get_agents() -> ResponseT[List[AgentRegistryInfo]]:
@@ -216,7 +212,10 @@ def main():
         if request.src_id in graph and request.dst_id in graph:
             src = graph[request.src_id]
             if request.dst_id not in src.interactions:
-                src.interactions.append(request.dst_id)
+                src.interactions.append(AgentInteraction(
+                    dst_id=request.dst_id,
+                    message=request.message
+                ))
                 logger.info(
                     f"Interaction ADD: {request.src_id} -> {request.dst_id}")
             return TextResponse(content='ok')
@@ -228,7 +227,7 @@ def main():
             )
 
     @app.post('/interactions/delete')
-    def delete_agent_interaction(request: AgentInteractionAddRequest):
+    def delete_agent_interaction(request: AgentInteractionDeleteRequest):
         """
         Delete an interaction between two agents.
         This is used to build the network graph of agent interactions.
@@ -236,10 +235,12 @@ def main():
 
         if request.src_id in graph and request.dst_id in graph:
             src = graph[request.src_id]
-            if request.dst_id in src.interactions:
-                src.interactions.remove(request.dst_id)
-                logger.info(
-                    f"Interaction DELETE: {request.src_id} -> {request.dst_id}")
+            for inter in src.interactions:
+                if inter.dst_id == request.dst_id:
+                    src.interactions.remove(inter)
+                    logger.info(
+                        f"Interaction DELETE: {request.src_id} -> {request.dst_id}")
+                    break
             return TextResponse(content='ok')
         else:
             logger.error(
@@ -257,6 +258,28 @@ def main():
 
         return ResponseT(content=[(src_id, dst_id)
                                   for src_id, v in graph.items() for dst_id in v.interactions])
+
+    @app.get('/interactions/user/{user_id}')
+    def get_user_interactions(user_id: str) -> ResponseT[List[Tuple[str, str]]]:
+        """
+        Get interactions for a specific user agent.
+        This is used to build the network graph of agent interactions.
+        """
+
+        if user_id not in graph:
+            logger.error(f"User({user_id}) not found.")
+            return ErrorResponse(
+                message=f"User({user_id}) not found.",
+            )
+
+        if graph[user_id].kind != 'user':
+            logger.error(f"User({user_id}) is not a user agent.")
+            return ErrorResponse(
+                message=f"User({user_id}) is not a user agent.",
+            )
+
+        user = graph[user_id]
+        return ResponseT(content=[[inter.dst_id, graph[inter.dst_id].name] for inter in user.interactions])
 
     @app.post('/task_count/add')
     def agent_task_count_add(request: AgentTaskCountAddRequest):
@@ -279,6 +302,8 @@ def main():
 
         agent = graph[request.agent_id]
         agent.task_count += 1
+        logger.info(
+            f"Agent({request.agent_id}) task_count ADD -> {agent.task_count}.")
         return TextResponse(content='ok')
 
     @app.post('/task_count/delete')
@@ -303,6 +328,8 @@ def main():
         agent = graph[request.agent_id]
         if agent.task_count > 0:
             agent.task_count -= 1
+            logger.info(
+                f"Agent({request.agent_id}) task_count DELETE -> {agent.task_count}.")
         return TextResponse(content='ok')
 
     @app.get('/task_count/{agent_id}')
@@ -352,7 +379,7 @@ def main():
     # ================================================================================
 
     @app.post('/events/task/{user_id}')
-    def task_add(user_id: str, request: Task):
+    def task_add(user_id: str, request: StampedTask):
         """
         Handle task update requests.
         """
@@ -361,9 +388,9 @@ def main():
             logger.error(f"User {user_id} does not exist.")
             return ErrorResponse(message=f"User {user_id} does not exist.")
 
-        if graph[user_id].kind != 'user':
-            logger.error(f"User {user_id} is not a user agent.")
-            return ErrorResponse(message=f"User {user_id} is not a user agent.")
+        # if graph[user_id].kind != 'user':
+        #     logger.error(f"User {user_id} is not a user agent.")
+        #     return ErrorResponse(message=f"User {user_id} is not a user agent.")
 
         user = graph[user_id]
         user.tasks[request.id] = request
@@ -381,9 +408,9 @@ def main():
             logger.error(f"User {user_id} does not exist.")
             return ErrorResponse(message=f"User {user_id} does not exist.")
 
-        if graph[user_id].kind != 'user':
-            logger.error(f"User {user_id} is not a user agent.")
-            return ErrorResponse(message=f"User {user_id} is not a user agent.")
+        # if graph[user_id].kind != 'user':
+        #     logger.error(f"User {user_id} is not a user agent.")
+        #     return ErrorResponse(message=f"User {user_id} is not a user agent.")
 
         user = graph[user_id]
 
@@ -409,9 +436,9 @@ def main():
             logger.error(f"User {user_id} does not exist.")
             return ErrorResponse(message=f"User {user_id} does not exist.")
 
-        if graph[user_id].kind != 'user':
-            logger.error(f"User {user_id} is not a user agent.")
-            return ErrorResponse(message=f"User {user_id} is not a user agent.")
+        # if graph[user_id].kind != 'user':
+        #     logger.error(f"User {user_id} is not a user agent.")
+        #     return ErrorResponse(message=f"User {user_id} is not a user agent.")
 
         user = graph[user_id]
 
@@ -444,6 +471,25 @@ def main():
             f"TaskArtifactUpdate(id={request.taskId}, artifactId={request.artifact.artifactId})")
         return TextResponse(content='ok')
 
+    @app.get('/events/get/all_tasks')
+    def get_all_tasks() -> ResponseT[Dict[str, Dict[str, Any]]]:
+        """
+        Retrieve all tasks from all users.
+        """
+
+        all_tasks = {}
+        for user_id, user in graph.items():
+            for task_id, task in user.tasks.items():
+                all_tasks[f"{user_id}:{task_id}"] = {
+                    'id': task.id,
+                    'status': str(task.status.state),
+                    'message': task.status.message.model_dump() if task.status.message else None,
+                    'timestamp': task.timestamp,
+                    'artifacts': [x.name for x in task.artifacts] if task.artifacts is not None else [],
+                }
+
+        return ResponseT(content=all_tasks)
+
     @app.get('/events/get/tasks/{user_id}')
     def get_tasks(user_id: str) -> ResponseT[Dict[str, Dict[str, Any]]]:
         """
@@ -465,7 +511,9 @@ def main():
                 k: {
                     'id': v.id,
                     'status': str(v.status.state),
-                    'message': v.status.message.model_dump() if v.status.message else None
+                    'message': v.status.message.model_dump() if v.status.message else None,
+                    'timestamp': v.timestamp,
+                    'artifacts': [x.name for x in v.artifacts] if v.artifacts is not None else [],
                 } for k, v in user.tasks.items()
             }
         )
@@ -494,6 +542,21 @@ def main():
 
         return ResponseT(content=artifacts)
 
+    @app.get('/events/get/all_artifacts')
+    def get_all_artifacts() -> ResponseT[List[Artifact]]:
+        """
+        Retrieve all artifacts from all users.
+        """
+
+        all_artifacts = []
+        for _, user in graph.items():
+            for task in user.tasks.values():
+                if task.artifacts:
+                    all_artifacts.extend(
+                        task.artifacts if task.artifacts else [])
+
+        return ResponseT(content=all_artifacts)
+
     # ============================================================
     # User Services
     # ============================================================
@@ -511,11 +574,13 @@ def main():
             return ErrorResponse(message=f"User {user_id} already registered.")
 
         graph[request.user_id] = UserAgentNode(
+            name=request.user_name,
             conversations={},
             tasks={}
         )
 
-        logger.info(f"UserRegistered(id={request.user_id})")
+        logger.info(
+            f"UserRegistered(id={request.user_id}, name={request.user_name})")
 
         return TextResponse(content='ok')
 
@@ -582,6 +647,7 @@ def main():
             user.conversations[request.conversation_id] = messages
             return TextResponse(content=str(choice.message.content))
         except Exception as e:
+            logger.error(f"Error /user/chat: {traceback.format_exc()}")
             return ErrorResponse(message=str(e))
 
     @app.get('/user/messages/{user_id}/{conversation_id}')

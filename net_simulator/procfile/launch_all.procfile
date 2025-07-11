@@ -1,0 +1,29 @@
+# system
+system: uv run nodes/system_server.py
+
+# scholar and essay
+essay: sleep 1 && uv run nodes/public_agent.py -a essay_writer_agent
+scholar_math: sleep 1 && uv run nodes/public_agent.py -a scholar_mathmatics_agent
+scholar_phy: sleep 1 && uv run nodes/public_agent.py -a scholar_physics_agent
+scholar_bio: sleep 1 && uv run nodes/public_agent.py -a scholar_biology_agent
+scholar_chem: sleep 1 && uv run nodes/public_agent.py -a scholar_chemistry_agent
+scholar_cs: sleep 1 && uv run nodes/public_agent.py -a scholar_computer_science_agent
+scholar_eco: sleep 1 && uv run nodes/public_agent.py -a scholar_economics_agent
+scholar_consult: sleep 1 && uv run nodes/public_agent.py -a scholar_consultant_agent
+
+# hospital and medical
+hos_outpatient: sleep 1 && uv run nodes/public_agent.py -a hospital_outpatient_agent
+hos_medrec: sleep 1 && uv run nodes/public_agent.py -a hospital_medical_record_agent
+hos_inventory: sleep 1 && uv run nodes/public_agent.py -a hospital_drug_inventory_agent
+med_spechost: sleep 1 && uv run nodes/public_agent.py -a medical_specialist_host_agent
+med_internist: sleep 1 && uv run nodes/public_agent.py -a medical_internist_agent
+med_pediatrician: sleep 1 && uv run nodes/public_agent.py -a medical_pediatrician_agent
+med_dermatologist: sleep 1 && uv run nodes/public_agent.py -a medical_dermatologist_agent
+med_obstetrician: sleep 1 && uv run nodes/public_agent.py -a medical_obstetrician_agent
+med_cardiologist: sleep 1 && uv run nodes/public_agent.py -a medical_cardiologist_agent
+med_endocrinologist: sleep 1 && uv run nodes/public_agent.py -a medical_endocrinologist_agent
+med_orthopedist: sleep 1 && uv run nodes/public_agent.py -a medical_orthopedist_agent
+
+# mcp
+mcp_medicrec: uv run mcp/medical_record.py
+mcp_druginv: uv run mcp/drug_inventory.py

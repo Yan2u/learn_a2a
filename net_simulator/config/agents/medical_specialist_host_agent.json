@@ -1,0 +1,48 @@
+{
+  "port": 8302,
+  "executor": "SpecialistHostExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Specialist Host",
+    "description": "A moderator agent for hospital expert group meetings that organizes specialists to analyze complex medical cases. Receives requests from GP agents, consults relevant medical experts, and provides comprehensive diagnostic opinions and conclusions.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "coordinate-specialist-meeting",
+        "name": "Coordinate Specialist Meeting",
+        "description": "Organizes and moderates expert group meetings for complex medical cases. Analyzes information from GP agents, identifies relevant medical specialties, consults expert agents in those fields, integrates their responses, and provides comprehensive diagnostic reports with professional medical opinions.",
+        "tags": [
+          "medical",
+          "diagnosis",
+          "specialist",
+          "coordination",
+          "expert-consultation"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Coordinate specialist consultation for a complex cardiac case with multiple symptoms",
+          "Organize expert meeting to analyze unusual dermatological conditions with systemic implications"
+        ]
+      }
+    ],
+    "supportsAuthenticatedExtendedCard": false
+  },
+  "expose": true,
+  "visible_to": [
+    "Hospital System"
+  ]
+}

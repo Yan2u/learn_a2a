@@ -27,6 +27,8 @@ class PublicAgent:
     config: dict
     manager_url: str
     agent_id: str
+    agent_name: str
+    agent_category: str
     keep_alive_thread: threading.Thread
 
     def __init__(self, config_name: str):
@@ -50,14 +52,41 @@ class PublicAgent:
             sleep(interval)
 
     def run(self):
+
+        # register
+        self.manager_url = f"http://localhost:{get_config('system.port')}"
+        response = requests.post(
+            f"{self.manager_url}/agents/register",
+            json={'name': self.config['agent_card']['name'],
+                  'category': self.config['category'],
+                  'url': f"http://localhost:{self.config['port']}",
+                  'expose': self.config['expose'],
+                  'visible_to': self.config.get('visible_to', None)}
+        )
+
+        if response.status_code != 200:
+            raise RuntimeError(f"Failed to register agent: {response.text}")
+
+        response = response.json()
+        if response['status'] != 'success':
+            raise RuntimeError(
+                f"Failed to register agent: {response['message']}")
+
+        self.agent_id = response['agent_id']
+        self.agent_name = self.config['agent_card']['name']
+        self.agent_category = self.config['category']
+
+        print(F"Registered as {self.agent_id}")
+
         exec_class = self.config['executor']
         if exec_class not in executors.__all__:
             raise ValueError(
                 f'Executor {exec_class} is not defined in executors')
 
-        executor = getattr(executors, exec_class)()
+        executor = getattr(executors, exec_class)(self.agent_id)
 
         agent_card = AgentCard(
+            url=f"http://localhost:{self.config['port']}",
             **self.config['agent_card']
         )
 
@@ -72,27 +101,6 @@ class PublicAgent:
             http_handler=request_handler,
         )
 
-        # register
-        self.manager_url = f"http://localhost:{get_config('system.port')}"
-        response = requests.post(
-            f"{self.manager_url}/agents/register",
-            json={'name': self.config['agent_card']['name'],
-                  'url': f"http://localhost:{self.config['port']}"}
-        )
-
-        if response.status_code != 200:
-            raise RuntimeError(f"Failed to register agent: {response.text}")
-
-        response = response.json()
-        if response['status'] != 'success':
-            raise RuntimeError(
-                f"Failed to register agent: {response['message']}")
-
-        self.agent_id = response['agent_id']
-
-        print(F"Registered as {self.agent_id}")
-
-        self.agent_id = response['agent_id']
         self.keep_alive_thread = threading.Thread(
             target=self._keep_alive, daemon=True)
         self.keep_alive_thread.start()

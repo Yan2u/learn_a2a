@@ -30,9 +30,10 @@ QUERY = 'google a2a'
 async def main():
     load_dotenv()
     print(f"[search_summary] Search and summarize in markdown: {QUERY}")
-    async with httpx.AsyncClient(base_url=f"http://localhost:{os.getenv('ORCHESTRATOR_PORT', 8002)}", timeout=360) as client:
+    async with httpx.AsyncClient(base_url=f"http://localhost:{os.getenv('ORCHESTRATOR_PORT', 8002)}", timeout=1800) as client:
         orchestrator_card = await A2ACardResolver(httpx_client=client, base_url=f"http://localhost:{os.getenv('ORCHESTRATOR_PORT', 8002)}").get_agent_card()
-        orchestrator_client = A2AClient(httpx_client=client, agent_card=orchestrator_card)
+        orchestrator_client = A2AClient(
+            httpx_client=client, agent_card=orchestrator_card)
 
         message_dict = {
             'message': {
@@ -52,7 +53,8 @@ async def main():
         response = orchestrator_client.send_message_streaming(message)
         async for chunk in response:
             if chunk.root.result.status.message:
-                print(chunk.root.result.status.message.parts[0].root.text, end='', flush=True)
+                print(
+                    chunk.root.result.status.message.parts[0].root.text, end='', flush=True)
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 from net_simulator.msgs.core_msgs import ResponseBase
 
@@ -22,6 +23,9 @@ class AgentRegistryRequest(BaseModel):
 
     name: str
     url: str
+    category: str
+    expose: bool
+    visible_to: List[str] | None = None
 
 
 class AgentRegistryResponse(ResponseBase):

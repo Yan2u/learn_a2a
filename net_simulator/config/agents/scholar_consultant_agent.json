@@ -1,0 +1,44 @@
+{
+  "port": 8206,
+  "executor": "ScholarConsultantExecutor",
+  "category": "Scholar",
+  "agent_card": {
+    "name": "Scholar Consultant",
+    "description": "An agent that acts as a Scholar Consultant, helping users address and answer questions in the academic field. It provides professional answers and advice.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "provide-academic-consultation",
+        "name": "Provide Academic Consultation",
+        "description": "Provides professional answers and advice on academic-related questions, helping users navigate and resolve issues in their field of study.",
+        "tags": [
+          "academic",
+          "consultant",
+          "research",
+          "advice"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are trending research topics in computer science?",
+          "What are latest progresses in large-scale gene editing and sequencing?"
+        ]
+      }
+    ]
+  },
+  "expose": true,
+  "visible_to": null
+}

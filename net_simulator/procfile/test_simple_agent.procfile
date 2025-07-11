@@ -1,0 +1,9 @@
+system: uv run nodes/system_server.py
+search: sleep 1 && uv run nodes/public_agent.py -a search_summarize_agent
+search_mcp: uv run mcp/langsearch.py
+math: sleep 1 && uv run nodes/public_agent.py -a scholar_mathmatics_agent
+phy: sleep 1 && uv run nodes/public_agent.py -a scholar_physics_agent
+bio: sleep 1 && uv run nodes/public_agent.py -a scholar_biology_agent
+chem: sleep 1 && uv run nodes/public_agent.py -a scholar_chemistry_agent
+cs: sleep 1 && uv run nodes/public_agent.py -a scholar_computer_science_agent
+eco: sleep 1 && uv run nodes/public_agent.py -a scholar_economics_agent

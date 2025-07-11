@@ -1,0 +1,43 @@
+{
+  "port": 8304,
+  "executor": "DermatologistExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Dermatologist",
+    "description": "An agent that acts as a Dermatologist, specializing in diseases of the skin, hair, and nails. Provides precise, visually descriptive information about dermatological conditions and standard treatment pathways. Always emphasizes the need for visual examination by a qualified dermatologist and that advice is for educational purposes only.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_dermatologist_questions",
+        "name": "Answer Dermatologist Questions",
+        "description": "Answers questions about skin, hair, and nail conditions as a Dermatologist. Always emphasizes the need for visual examination by a dermatologist and that advice is for educational purposes only.",
+        "tags": [
+          "dermatologist",
+          "medical",
+          "skin"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are the common causes of eczema?",
+          "How is acne typically treated?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

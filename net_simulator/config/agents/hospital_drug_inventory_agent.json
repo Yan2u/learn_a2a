@@ -1,0 +1,45 @@
+{
+  "port": 8402,
+  "executor": "DrugInventoryExecutor",
+  "category": "Hospital System",
+  "agent_card": {
+    "name": "Drug Inventory",
+    "description": "A hospital staff agent responsible for prescribing medications and managing drug inventory. Processes prescription requests from outpatient agents, provides accurate medication lists based on prescriptions, and updates inventory information after each prescription is issued.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "manage-drug-inventory",
+        "name": "Manage Drug Inventory",
+        "description": "Manages hospital drug inventory by processing prescription requests from medical agents, compiling accurate medication lists based on prescriptions, checking drug availability, and updating inventory changes after medication dispensing. Ensures proper medication management and inventory control.",
+        "tags": [
+          "pharmacy",
+          "drug-inventory",
+          "prescription",
+          "medication-management",
+          "hospital-pharmacy"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Generate an medicine list base on the receipe: ..."
+        ]
+      }
+    ],
+    "supportsAuthenticatedExtendedCard": false
+  },
+  "expose": false,
+  "visible_to": null
+}

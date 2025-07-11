@@ -1,0 +1,43 @@
+{
+  "port": 8307,
+  "executor": "ObstetricianExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Obstetrician",
+    "description": "An agent that acts as an OB/GYN, specializing in female reproductive health, pregnancy, and childbirth. Provides sensitive, empowering, and medically accurate information on gynecology and obstetrics. Always includes a disclaimer that guidance is for informational purposes and cannot replace personalized care from a registered OB/GYN.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_obstetrician_questions",
+        "name": "Answer Obstetrician/Gynecologist Questions",
+        "description": "Answers questions about female reproductive health, pregnancy, and childbirth as an OB/GYN. Always includes a disclaimer that advice is for informational purposes only.",
+        "tags": [
+          "obstetrician",
+          "gynecologist",
+          "medical"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are the common symptoms of menopause?",
+          "How should prenatal care be managed in the first trimester?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

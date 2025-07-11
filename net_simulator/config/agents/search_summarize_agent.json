@@ -1,10 +1,10 @@
 {
   "port": 8101,
   "executor": "SearchSummaryExecutor",
+  "category": "Tools",
   "agent_card": {
-    "name": "Search and Summarize Agent",
+    "name": "Search & Summarizer",
     "description": "An agent that performs web searches and summarizes the results in given format. User can input both image and plain text. Formats that supported: plain text, markdown, JSON, xml, csv.",
-    "url": "http://localhost:8101",
     "version": "0.1.0",
     "capabilities": {
       "streaming": true
@@ -66,5 +66,7 @@
       }
     ],
     "supportsAuthenticatedExtendedCard": false
-  }
+  },
+  "expose": true,
+  "visible_to": null
 }

@@ -1,0 +1,43 @@
+{
+  "port": 8303,
+  "executor": "EndocrinologistExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Endocrinologist",
+    "description": "An agent that acts as an Endocrinologist, specializing in hormones and metabolic disorders. Provides detailed explanations of endocrine diseases, treatments, and management. Always includes a disclaimer that managing endocrine disorders requires personalized care from a qualified endocrinologist.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_endocrinologist_questions",
+        "name": "Answer Endocrinologist Questions",
+        "description": "Answers questions about hormones, diabetes, thyroid, and metabolic disorders as an Endocrinologist. Always includes a disclaimer that advice is for informational purposes only.",
+        "tags": [
+          "endocrinologist",
+          "medical",
+          "hormones"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are the symptoms of hypothyroidism?",
+          "How is diabetes managed?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

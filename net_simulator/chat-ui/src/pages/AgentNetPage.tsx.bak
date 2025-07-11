@@ -1,0 +1,198 @@
+import React, { useEffect, useState } from 'react';
+import { Button } from "@/components/ui/button"; // 从 shadcn/ui 导入 Button
+import { LayoutDashboard } from "lucide-react"; // 导入图标
+import { useInterval } from 'ahooks';
+import VisGraph, { GraphData } from 'react-vis-graph-wrapper';
+import { config } from '@/config';
+import { AgentNetGraphNode, PublicAgentNode, UserAgentNode } from '@/types';
+import axios from 'axios';
+import { toast } from 'sonner';
+
+function AgentNetwork() {
+    const [graph, setGraph] = useState<GraphData>({ nodes: [], edges: [] });
+
+    const [graphNodes, setGraphNodes] = useState<Record<string, AgentNetGraphNode>>({});
+
+    // vis-network 图表的配置选项
+    const options = config.graphOptions;
+
+    // useEffect 用于在组件挂载后处理数据和模拟后端更新
+    useEffect(() => {
+        const interactingAgents = new Set();
+        const items = Object.entries(graphNodes);
+        items.forEach(([id, node]) => {
+            if (node.interactions.length > 0) {
+                interactingAgents.add(id);
+            }
+            node.interactions.forEach(interactionId => {
+                interactingAgents.add(interactionId);
+            })
+        });
+
+        // 1. 定义节点 (Nodes)
+        const publicAgents = items.filter(([, x]) => x.kind === 'public');
+        const userAgents = items.filter(([, x]) => x.kind === 'user');
+        const publicAgentNodes = publicAgents.map(([id, agent], index) => {
+            const publicAgent = agent as PublicAgentNode;
+            const isWorking = publicAgent.task_count > 0;
+            const radius = 600;
+            const angle = (index / publicAgents.length) * 2 * Math.PI; // 均匀分布在圆周上
+
+            return {
+                id: id,
+                shape: 'box',
+                label: publicAgent.task_count > 0 ? `${publicAgent.name}\n(${publicAgent.task_count})` : publicAgent.name,
+                color: {
+                    border: isWorking ? '#219ebc' : '#6a994e', // 紫色边框表示工作中，靛蓝色表示空闲
+                    background: isWorking ? '#8ecae6' : '#a7c957', // 浅紫色背景表示工作中
+                },
+                size: 30,
+                font: {
+                    size: 15,
+                    color: '#264653', // 字体颜色
+                },
+                x: radius * Math.cos(angle), // 手动设定位置
+                y: radius * Math.sin(angle), // 手动设定位置
+            }
+        });
+
+        const userAgentNodes = userAgents.map(([id, agent], index) => {
+            const userAgent = agent as UserAgentNode;
+            const isWorking = interactingAgents.has(id);
+            const radius = 900;
+            const angle = (index / userAgents.length) * 2 * Math.PI; //
+
+            return {
+                id: id,
+                shape: 'circle',
+                label: userAgent.name,
+                color: {
+                    border: isWorking ? '#219ebc' : '#6a994e', // 紫色边框表示工作中，靛蓝色表示空闲
+                    background: isWorking ? '#8ecae6' : '#a7c957', // 浅紫色背景表示工作中
+                },
+                size: 20,
+                font: {
+                    size: 15,
+                    color: '#264653', // 字体颜色
+                },
+                x: radius * Math.cos(angle), // 手动设定位置
+                y: radius * Math.sin(angle), // 手动设定位置
+            }
+        });
+
+        const nodes = [...publicAgentNodes, ...userAgentNodes];
+
+        // 2. 定义连线 (Edges)
+        const allEdges = [];
+        let edgeId = 0;
+
+        // 公共节点之间互相连接
+        const n = items.length;
+        for (let i = 0; i < n; ++i) {
+            const [id, node] = items[i];
+            const interactions = new Set<string>();
+            node.interactions.forEach(interactionId => {
+                allEdges.push({
+                    id: ++edgeId,
+                    from: id,
+                    to: interactionId,
+                    dashes: false, // 实线
+                    width: 3,
+                    color: '#F87171', // 红色高亮
+                });
+                interactions.add(interactionId);
+            });
+
+            for (let j = i + 1; j < items.length; ++j) {
+                const [id2, node2] = items[j];
+                if (interactions.has(id2)) {
+                    continue;
+                }
+                if (node.kind === 'public' && node2.kind === 'public') {
+                    allEdges.push({
+                        id: ++edgeId,
+                        from: id,
+                        to: id2,
+                        dashes: true, // 默认虚线
+                        width: 3,
+                        color: '#dedbd2', // 默认颜色
+                    });
+                }
+            }
+        }
+
+
+        setGraph({ nodes, edges: allEdges });
+    }, [graphNodes]); // 当 agents 数据变化时，重新计算图表
+
+    useInterval(() => {
+        axios.get(`http://localhost:${config.userServer.port}/graph`, { timeout: 1000 })
+            .then(response => {
+                if (response.status === 200) {
+                    const graph: Record<string, AgentNetGraphNode> = response.data.content;
+                    setGraphNodes(graph);
+                } else {
+                    console.error("Failed to fetch graph data:", response.statusText);
+                    toast.error("Failed to fetch graph data. Please check the server status.");
+                }
+            }).catch(error => {
+                console.error("Error fetching graph data:", error);
+                toast.error("Failed to fetch graph data. Please check the server status.");
+            })
+
+    }, config.graphUpdateInterval, { immediate: true })
+
+    return (
+        <VisGraph
+            graph={graph}
+            options={options}
+        />
+    );
+}
+
+function AgentNetPage() {
+    return (
+        // 主容器，使用 flex 布局，高度为屏幕高度
+        <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+
+            {/* 左侧导航栏 */}
+            <aside className="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
+                <div className="flex h-full flex-col p-4">
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold tracking-tight">Agent Control</h2>
+                    </div>
+                    <nav className="flex flex-col gap-2">
+                        {/* 使用 shadcn/ui 的 Button 作为导航项 */}
+                        <Button variant="ghost" className="justify-start gap-2">
+                            <LayoutDashboard className="h-4 w-4" />
+                            Dashboard
+                        </Button>
+                        {/* 你可以在这里添加更多导航项 */}
+                    </nav>
+                </div>
+            </aside>
+
+            {/* 右侧主内容区 */}
+            <main className="flex flex-1 flex-col overflow-hidden">
+                <div className="flex-1 flex flex-col p-6 gap-6">
+
+                    {/* 标题 */}
+                    <div className="flex-shrink-0">
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+                            Network
+                        </h1>
+                    </div>
+
+                    {/* 网络图容器 */}
+                    <div className="flex-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 p-1 shadow-sm relative">
+                        {/* AgentNetwork 组件现在在这里渲染 */}
+                        <AgentNetwork />
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    );
+}
+
+export default AgentNetPage;

@@ -14,7 +14,10 @@ dependencies = [
     "dotenv",
     "google-genai",
     "fastapi[all]",
-    "fastmcp"
+    "fastmcp",
+    "honcho",
+    "baostock>=0.8.9",
+    "rich>=14.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]

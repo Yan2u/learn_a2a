@@ -1,0 +1,43 @@
+{
+  "port": 8400,
+  "executor": "OutpatientDoctorExecutor",
+  "category": "Hospital System",
+  "agent_card": {
+    "name": "Outpatient Doctor",
+    "description": "An agent that acts as a highly knowledgeable and empathetic Outpatient Doctor, providing broad primary care information, initial diagnosis, and preventive health advice. It guides users on common illnesses and when to seek specialist care. All advice includes a disclaimer that it does not replace real-world healthcare.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_general_questions",
+        "name": "Answer General Medical Questions",
+        "description": "Answers general medical questions as a GP, providing initial diagnosis, management, and preventive care advice. Always includes a disclaimer that advice is for informational purposes only.",
+        "tags": [
+          "general",
+          "medical",
+          "primary care"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What should I do if I have a sore throat and mild fever?",
+          "How often should adults get a general health check-up?"
+        ]
+      }
+    ]
+  },
+  "expose": true,
+  "visible_to": null
+}

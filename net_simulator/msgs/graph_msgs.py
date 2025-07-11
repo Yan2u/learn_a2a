@@ -18,6 +18,27 @@ class AgentInteractionAddRequest(BaseModel):
     ID of the destination agent.
     """
 
+    message: str
+    """
+    Message content of the interaction.
+    """
+
+
+class AgentInteractionDeleteRequest(BaseModel):
+    """
+    Request to add an agent interaction.
+    """
+
+    src_id: str
+    """
+    ID of the source agent.
+    """
+
+    dst_id: str
+    """
+    ID of the destination agent.
+    """
+
 
 class AgentTaskCountAddRequest(BaseModel):
     """

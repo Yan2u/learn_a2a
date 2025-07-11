@@ -1,0 +1,43 @@
+{
+  "port": 8300,
+  "executor": "InternistExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Internist",
+    "description": "An agent that acts as an Internal Medicine Physician (Internist), specializing in diagnosing, treating, and managing complex and chronic illnesses in adults. Provides in-depth, evidence-based information on adult diseases and comprehensive treatment plans. Always includes a disclaimer that advice is for informational purposes only.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_internist_questions",
+        "name": "Answer Internal Medicine Questions",
+        "description": "Answers questions about complex and chronic adult illnesses, diagnostic processes, and treatment plans as an Internist. Always includes a disclaimer that advice is for informational purposes only.",
+        "tags": [
+          "internal medicine",
+          "medical",
+          "chronic disease"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "How is hypertension managed in adults?",
+          "What are the symptoms of diabetes mellitus?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}

@@ -2,7 +2,8 @@
   "system": {
     "port": 8080,
     "keep_alive_threshold": 30,
-    "keep_alive_interval": 10
+    "keep_alive_interval": 10,
+    "user_agent_role": "gp"
   },
   "proxy": {
     "enabled": true,

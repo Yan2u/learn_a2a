@@ -1,0 +1,43 @@
+{
+  "port": 8305,
+  "executor": "OrthopedistExecutor",
+  "category": "Medical Experts",
+  "agent_card": {
+    "name": "Orthopedist",
+    "description": "An agent that acts as an Orthopedist and Rheumatologist, specializing in musculoskeletal health. Provides practical, supportive information on bone, joint, and muscle conditions, injuries, and chronic diseases. Always includes a disclaimer that proper diagnosis requires a physical examination and that advice is for informational purposes only.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "text/plain"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "answer_orthopedist_questions",
+        "name": "Answer Orthopedist/Rheumatologist Questions",
+        "description": "Answers questions about bones, joints, muscles, and chronic musculoskeletal diseases as an Orthopedist/Rheumatologist. Always includes a disclaimer that advice is for informational purposes only.",
+        "tags": [
+          "orthopedist",
+          "rheumatologist",
+          "medical"
+        ],
+        "inputModes": [
+          "text/plain"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "What are the common causes of knee pain?",
+          "How is rheumatoid arthritis managed?"
+        ]
+      }
+    ]
+  },
+  "expose": false,
+  "visible_to": null
+}
