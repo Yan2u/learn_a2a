@@ -21,6 +21,10 @@ from typing_extensions import Annotated
 from net_simulator.datamodels import StampedTask
 from net_simulator.msgs import AgentRegistryInfo
 from net_simulator.utils import get_config
+from pathlib import Path
+import json
+
+CWD = Path(__file__).parent
 
 
 class AgentService:
@@ -193,11 +197,48 @@ class AgentService:
             2.
             [
                 {'kind' : 'text', 'text': 'What is in this picture?'}
-                {'kind' : 'file', 'file': {'bytes': '<Your base64 encoded picture bytes>'}} // <-- a FilePart with kind=file. 
+                {'kind' : 'file', 'file': {'bytes': '<ID of this file in the file system>'} // <-- a FilePart with kind=file. 
                 // NOTE: This json format must be strictly followed, or your request will fail.
             ]
 
-            Returns a JSON object that describes the task that was created by the agent.
+            Currently, use `'kind': 'file'` only when you want to pass an image to the agent.
+
+            ID OF THE FILE:
+
+            You can know the ID of the file from both users and other agents. When you want to send this file to another agent, you should pass the ID of the file in the `bytes` field. It is automatically replace by file system.
+            For example, you can suppose that the file system is:
+            {
+                'abc123abc' : {
+                    'type' : 'image/jpeg',
+                    'data' : '<base64 encoded image data>'
+                }
+            }
+
+            Then you just pass
+
+            {
+                'kind': 'file',
+                'file': {
+                    'bytes': 'abc123abc'
+                }
+            }
+
+            It will be
+
+            {
+                'kind': 'file',
+                'file': {
+                    'mimeType': 'image/jpeg',
+                    'bytes': '<base64 encoded image data>'
+                }
+            }
+
+            You should tell others about the ID of the file at the same time you send them files, so they can use it in their requests.
+            For example: "Please help me analyze this image. The ID of the image is abc123abc. You can use it in your requests to other agents."
+
+            You must STRICTLY follow the JSON format or the request will FAIL.
+
+            This will return a JSON object that describes the task that was created by the agent.
 
             PARAMETERS:
 

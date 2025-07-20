@@ -8,7 +8,7 @@ from a2a.types import TextPart, FilePart, FileWithBytes, TaskStatusUpdateEvent, 
 from a2a.utils import new_task, new_agent_text_message
 import httpx
 
-from net_simulator.executors.executor_base import ExecutorBase
+from net_simulator.executors.executor_base import ExecutorBase, GeneralTextExecutor
 from net_simulator.utils import OpenAIService, SiliconFlowService, get_config, get_llm
 
 from fastmcp.client.transports import PythonStdioTransport
@@ -48,68 +48,18 @@ You should strive for as accurate a diagnosis and analysis of the patient's cond
 
 #### Tools
 
-You will use the provided tools to identify agents within the network. You can also use the tools to search for information online to assist your diagnosis. However, when encountering complex conditions, your first choice should be to request assistance from the expert panel, as they have more extensive experience."""
+You will use the provided tools to identify agents within the network. You can also use the tools to search for information online to assist your diagnosis. However, when encountering complex conditions, your first choice should be to request assistance from the expert panel, as they have more extensive experience.
+
+#### IMAGES AND FILES
+
+- As a agent in the network, you may communicate with other agents using files (such as images).
+- To avoid outputing bytes directly, each time you want to send a file (an image) to other agent, you are supposed to use its **ID in the file system**. And you should pass this ID to him as well. For details, you can read instructions of the tool `agent_send_message`.
+"""
 
 
-class OutpatientDoctorExecutor(ExecutorBase):
-    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        task = context.current_task
-        if not task:
-            task = new_task(context.message)
-            await event_queue.enqueue_event(task)
-            await self._post_task_start()
-
-        transport = PythonStdioTransport(
-            script_path='/home/yan2u/learn_a2a/net_simulator/mcp/agent_service.py',
-            args=['-i', self.agent_id, '-r', 'agent'],
-        )
-
-        messages = self.task_messages.get(
-            task.id, [{'role': 'system', 'content': OUTPATIENT_DOCTOR_PROMPT}])
-
-        user_input = context.get_user_input(delimiter='\n')
-        self.logger.info(f'User input: {user_input}')
-        updater = TaskUpdater(event_queue, task.id, task.contextId)
-
-        messages.append({
-            'role': 'user',
-            'content': user_input
-        })
-
-        await updater.start_work(new_agent_text_message(
-            text='Starting specialist meeting...',
-            context_id=task.contextId,
-            task_id=task.id
-        ))
-
-        llm = get_llm()
-        try:
-
-            messages, choice = await llm.send_message_mcp(messages, transport)
-            self.task_messages[task.id] = messages
-            self.logger.info(
-                f"Task({task.id}) response: {choice.message.content[:100]}...")
-            await updater.add_artifact(
-                parts=[TextPart(text=choice.message.content)],
-                name='spec_meeting_summary'
-            )
-            await updater.complete()
-            await self._post_task_end()
-        except Exception as e:
-            self.logger.error(f"Task({task.id}) error:")
-            self.logger.error(traceback.format_exc())
-            await updater.failed(
-                new_agent_text_message(
-                    text=f"Unexpected Error: {e}",
-                    task_id=task.id,
-                    context_id=task.contextId,
-                )
-            )
-            await self._post_task_end()
-            return
-
-    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise NotImplementedError()
+class OutpatientDoctorExecutor(GeneralTextExecutor):
+    name = 'outpatient doctor'
+    system_prompt = OUTPATIENT_DOCTOR_PROMPT
 
 
 MEDIAL_RECORD_PROMPT = """You are now a staff member responsible for managing patient medical records at a hospital. You are connected to the hospital's agent network. Your information plays a very important role in the diagnostic effectiveness of outpatient agents. Outpatient or specialist agents may request you to retrieve or update the medical records of a specific patient (identified by medical record ID). You need to:
@@ -128,20 +78,13 @@ You will use the provided tools to:
 """
 
 
-class MedialRecordExecutor(ExecutorBase):
-    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        task = context.current_task
-        if not task:
-            task = new_task(context.message)
-            await event_queue.enqueue_event(task)
-            await self._post_task_start()
+class MedialRecordExecutor(GeneralTextExecutor):
+    name = 'medical record'
+    system_prompt = MEDIAL_RECORD_PROMPT
 
-        # transport = PythonStdioTransport(
-        #     script_path='/home/yan2u/learn_a2a/net_simulator/mcp/agent_service.py',
-        #     args=['-i', self.agent_id, '-r', 'agent'],
-        # )
-
-        mcp_config = {
+    def __init__(self, agent_id):
+        super().__init__(agent_id)
+        self.mcp_configs = {
             'mcpServers': {
                 'agent_network': {
                     'transport': 'stdio',
@@ -156,53 +99,6 @@ class MedialRecordExecutor(ExecutorBase):
             }
         }
 
-        messages = self.task_messages.get(
-            task.id, [{'role': 'system', 'content': MEDIAL_RECORD_PROMPT}])
-
-        user_input = context.get_user_input(delimiter='\n')
-        self.logger.info(f'User input: {user_input}')
-        updater = TaskUpdater(event_queue, task.id, task.contextId)
-
-        messages.append({
-            'role': 'user',
-            'content': user_input
-        })
-
-        await updater.start_work(new_agent_text_message(
-            text='Starting querying medial record system...',
-            context_id=task.contextId,
-            task_id=task.id
-        ))
-
-        llm = get_llm()
-        try:
-
-            messages, choice = await llm.send_message_mcp(messages, mcp_config)
-            self.task_messages[task.id] = messages
-            self.logger.info(
-                f"Task({task.id}) response: {choice.message.content[:100]}...")
-            await updater.add_artifact(
-                parts=[TextPart(text=choice.message.content)],
-                name='medial_record_result'
-            )
-            await updater.complete()
-            await self._post_task_end()
-        except Exception as e:
-            self.logger.error(f"Task({task.id}) error:")
-            self.logger.error(traceback.format_exc())
-            await updater.failed(
-                new_agent_text_message(
-                    text=f"Unexpected Error: {e}",
-                    task_id=task.id,
-                    context_id=task.contextId,
-                )
-            )
-            await self._post_task_end()
-            return
-
-    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise NotImplementedError()
-
 
 DRUG_INVENTORY_PROMPT = """You are now a hospital staff member responsible for prescribing medications and managing medication inventory. You are connected to the hospital's agent network. You need to process prescription requests from outpatient agents and provide patients with accurate medication lists (including name of the drug and amount, perhaps with medication advice to instruct patients taking the drugs properly) based on the prescription lists issued by outpatient agents. After each prescription is issued, you need to use the tool to update inventory change information.
 
@@ -216,21 +112,13 @@ You will use the provided tools to:
 """
 
 
-class DrugInventoryExecutor(ExecutorBase):
+class DrugInventoryExecutor(GeneralTextExecutor):
+    name = 'drug inventory'
+    system_prompt = DRUG_INVENTORY_PROMPT
 
-    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        task = context.current_task
-        if not task:
-            task = new_task(context.message)
-            await event_queue.enqueue_event(task)
-            await self._post_task_start()
-
-        # transport = PythonStdioTransport(
-        #     script_path='/home/yan2u/learn_a2a/net_simulator/mcp/agent_service.py',
-        #     args=['-i', self.agent_id, '-r', 'agent'],
-        # )
-
-        mcp_config = {
+    def __init__(self, agent_id):
+        super().__init__(agent_id)
+        self.mcp_configs = {
             'mcpServers': {
                 'agent_network': {
                     'transport': 'stdio',
@@ -244,50 +132,3 @@ class DrugInventoryExecutor(ExecutorBase):
                 }
             }
         }
-
-        messages = self.task_messages.get(
-            task.id, [{'role': 'system', 'content': DRUG_INVENTORY_PROMPT}])
-
-        user_input = context.get_user_input(delimiter='\n')
-        self.logger.info(f'User input: {user_input}')
-        updater = TaskUpdater(event_queue, task.id, task.contextId)
-
-        messages.append({
-            'role': 'user',
-            'content': user_input
-        })
-
-        await updater.start_work(new_agent_text_message(
-            text='Starting querying drug inventory system...',
-            context_id=task.contextId,
-            task_id=task.id
-        ))
-
-        llm = get_llm()
-        try:
-
-            messages, choice = await llm.send_message_mcp(messages, mcp_config)
-            self.task_messages[task.id] = messages
-            self.logger.info(
-                f"Task({task.id}) response: {choice.message.content[:100]}...")
-            await updater.add_artifact(
-                parts=[TextPart(text=choice.message.content)],
-                name='drug_inventory_result'
-            )
-            await updater.complete()
-            await self._post_task_end()
-        except Exception as e:
-            self.logger.error(f"Task({task.id}) error:")
-            self.logger.error(traceback.format_exc())
-            await updater.failed(
-                new_agent_text_message(
-                    text=f"Unexpected Error: {e}",
-                    task_id=task.id,
-                    context_id=task.contextId,
-                )
-            )
-            await self._post_task_end()
-            return
-
-    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise NotImplementedError()

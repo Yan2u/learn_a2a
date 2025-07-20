@@ -1,5 +1,5 @@
 {
-  "port": 8100,
+  "port": 8101,
   "executor": "EssayWriterExecutor",
   "category": "Tools",
   "agent_card": {

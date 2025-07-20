@@ -24,6 +24,10 @@ med_cardiologist: sleep 1 && uv run nodes/public_agent.py -a medical_cardiologis
 med_endocrinologist: sleep 1 && uv run nodes/public_agent.py -a medical_endocrinologist_agent
 med_orthopedist: sleep 1 && uv run nodes/public_agent.py -a medical_orthopedist_agent
 
+# others
+music: sleep 1 && uv run nodes/public_agent.py -a music_expert_agent
+transcriptor: sleep 1 && uv run nodes/public_agent.py -a transcriptor_agent
+
 # mcp
 mcp_medicrec: uv run mcp/medical_record.py
 mcp_druginv: uv run mcp/drug_inventory.py

@@ -3,41 +3,60 @@
     "port": 8080,
     "keep_alive_threshold": 30,
     "keep_alive_interval": 10,
-    "user_agent_role": "gp"
+    "supported_media_types": [
+      "image/jpeg",
+      "image/png",
+      "audio/mpeg",
+      "audio/mp3",
+      "audio/wav"
+    ],
+    "role": "general"
   },
   "proxy": {
-    "enabled": true,
-    "use": "ssh",
+    "enabled": false,
+    "use": "wsl",
     "ssh": "http://127.0.0.1:7890",
     "wsl": "http://172.31.64.1:7890"
   },
   "api_services": {
     "openai": {
       "api_key": "<yours>",
-      "base_url": "https://openai.wndbac.cn/v1",
+      "base_url": "https://api.openai.com/v1/",
       "model": "gpt-4o"
     },
     "gemini": {
       "api_key": "<yours>",
-      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-      "model": "gemini-2.5-flash-lite-preview-06-17"
+      "base_url": "https://yan2u-gemini.deno.dev/v1beta/openai",
+      "model": "gemini-2.5-flash"
+    },
+    "gemini-genai": {
+      "api_key": "<yours>",
+      "base_url": "https://yan2u-gemini.deno.dev",
+      "model": "gemini-2.5-flash"
     },
     "silicon-flow": {
       "api_key": "<yours>",
       "base_url": "https://api.siliconflow.cn/v1",
-      "model": "Qwen/Qwen3-30B-A3B"
+      "model": "deepseek-ai/DeepSeek-V3"
     },
     "silicon-flow-vision": {
       "api_key": "<yours>",
       "base_url": "https://api.siliconflow.cn/v1",
       "model": "Pro/Qwen/Qwen2.5-VL-7B-Instruct",
       "tools": false
+    },
+    "deepseek": {
+      "api_key": "<yours>",
+      "base_url": "https://api.deepseek.com/v1",
+      "model": "deepseek-chat"
     }
   },
-  "api_service": "gemini",
+  "api_service": "gemini-genai",
   "langsearch_api_key": "<yours>",
   "mcp": {
     "langsearch_port": 8081,
-    "agent_discover_port": 8082
+    "agent_discover_port": 8082,
+    "medical_record_port": 8083,
+    "drug_inventory_port": 8084
   }
 }

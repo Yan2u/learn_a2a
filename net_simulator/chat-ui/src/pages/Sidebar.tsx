@@ -1,14 +1,19 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils'; // shadcn/ui 的一个工具函数，用于合并class
 import { useDialog, useUser } from '@/contexts';
 import { Button } from '@/components/ui/button';
+import { config } from '@/config';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 export function Sidebar() {
 
     const { userData, userId, addConversation } = useUser(); // <-- 从 Context 获取当前用户的数据
 
     const { showInputDialog: showDialog } = useDialog();
+
+    const navigateTo = useNavigate();
 
     const handleNewConversation = () => {
         showDialog(
@@ -21,6 +26,20 @@ export function Sidebar() {
                 }
             }
         )
+    }
+
+    const handleReset = async () => {
+        const serverUrl = `http://localhost:${config.userServer.port}`;
+        const response = await axios.post(`${serverUrl}/user/unregister_all`);
+        if (response.status === 200) {
+            localStorage.removeItem('agentNetUserData');
+            localStorage.removeItem('records');
+            toast.info("All users and conversations have been reset.");
+        } else {
+            toast.error("Failed to reset users and conversations.");
+            console.error("Reset failed:", response.data);
+        }
+        navigateTo('/login');
     }
 
     /**
@@ -41,11 +60,10 @@ export function Sidebar() {
     return (
         // 使用 padding-right 为 0，让 scrollbar 贴边
         <ScrollArea className="h-full px-4 py-6">
-            <div className="space-y-4">
+            <div className="space-y-4 space-x-4">
                 {/* Operations  */}
-                <div>
-                    <Button onClick={handleNewConversation}>New Conversation</Button>
-                </div>
+                <Button onClick={handleNewConversation}>New</Button>
+                <Button onClick={handleReset}>Reset</Button>
 
                 {/* Conversations Section */}
                 <div>

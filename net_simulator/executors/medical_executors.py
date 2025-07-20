@@ -4,7 +4,7 @@ from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
 from a2a.types import TextPart
 from a2a.utils import new_task, new_agent_text_message
-from net_simulator.executors.executor_base import ExecutorBase
+from net_simulator.executors.executor_base import ExecutorBase, GeneralTextExecutor
 from net_simulator.utils import get_llm
 from fastmcp.client.transports import PythonStdioTransport
 
@@ -29,91 +29,46 @@ SYSTEM_PROMPT_TEMPLATE = """{field_prompt}
 - If you determine that the user is asking a question that mixes multiple fields, you can discover assistants in the network in the relevant fields and ask them for help. If there is no corresponding academic assistant in the network, you should stop answering and inform the user that it cannot be handled."""
 
 
-class MedicalExecutorBase(ExecutorBase):
-    field: str | None = None  # 子类需覆盖
-
-    def get_system_prompt(self):
-        return SYSTEM_PROMPT_TEMPLATE.format(field_prompt=FIELD_PROMPT[self.field])
-
-    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        task = context.current_task
-        if not task:
-            task = new_task(context.message)
-            await event_queue.enqueue_event(task)
-            await self._post_task_start()
-        transport = PythonStdioTransport(
-            script_path='/home/yan2u/learn_a2a/net_simulator/mcp/agent_service.py',
-            args=['-i', self.agent_id, '-r', 'agent'],
-        )
-        messages = self.task_messages.get(
-            task.id, [{'role': 'system', 'content': self.get_system_prompt()}])
-        user_input = context.get_user_input(delimiter='\n')
-        self.logger.info(f'User input: {user_input}')
-        updater = TaskUpdater(event_queue, task.id, task.contextId)
-        messages.append({
-            'role': 'user',
-            'content': user_input
-        })
-        await updater.start_work(new_agent_text_message(
-            text=f'Starting {self.field} medical assistant task...',
-            context_id=task.contextId,
-            task_id=task.id
-        ))
-        llm = get_llm()
-        try:
-            messages, choice = await llm.send_message_mcp(messages, transport)
-            self.task_messages[task.id] = messages
-            self.logger.info(
-                f"Task({task.id}) response: {choice.message.content[:100]}...")
-            await updater.add_artifact(
-                parts=[TextPart(text=choice.message.content)],
-                name=f'{self.field.replace(" ", "_")}_answer'
-            )
-            await updater.complete()
-            await self._post_task_end()
-        except Exception as e:
-            self.logger.error(f"Task({task.id}) error:")
-            self.logger.error(traceback.format_exc())
-            await updater.failed(
-                new_agent_text_message(
-                    text=f"Unexpected Error: {e}",
-                    task_id=task.id,
-                    context_id=task.contextId,
-                )
-            )
-            await self._post_task_end()
-            return
-
-    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise NotImplementedError()
+class InternistExecutor(GeneralTextExecutor):
+    name = 'internist'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['internist'])
 
 
-class InternistExecutor(MedicalExecutorBase):
-    field = 'internist'
+class PediatricianExecutor(GeneralTextExecutor):
+    name = 'pediatrician'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['pediatrician'])
 
 
-class PediatricianExecutor(MedicalExecutorBase):
-    field = 'pediatrician'
+class DermatologistExecutor(GeneralTextExecutor):
+    name = 'dermatologist'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['dermatologist'])
 
 
-class DermatologistExecutor(MedicalExecutorBase):
-    field = 'dermatologist'
+class ObstetricianExecutor(GeneralTextExecutor):
+    name = 'obstetrician'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['obstetrician'])
 
 
-class ObstetricianExecutor(MedicalExecutorBase):
-    field = 'obstetrician'
+class CardiologistExecutor(GeneralTextExecutor):
+    name = 'cardiologist'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['cardiologist'])
 
 
-class CardiologistExecutor(MedicalExecutorBase):
-    field = 'cardiologist'
+class EndocrinologistExecutor(GeneralTextExecutor):
+    name = 'endocrinologist'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['endocrinologist'])
 
 
-class EndocrinologistExecutor(MedicalExecutorBase):
-    field = 'endocrinologist'
-
-
-class OrthopedistExecutor(MedicalExecutorBase):
-    field = 'orthopedist'
+class OrthopedistExecutor(GeneralTextExecutor):
+    name = 'orthopedist'
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        field_prompt=FIELD_PROMPT['orthopedist'])
 
 
 SPECIALIST_HOST_PROMPT = """You are now the moderator of a hospital expert group meeting. You need to receive requests from outpatient doctors' agents, organize experts in specific fields, analyze the requests and conditions of outpatient doctors, and provide more professional diagnostic opinions and conclusions.
@@ -127,72 +82,21 @@ You are connected to the hospital's agent network. In this network, you interfac
 - Based on the responses, you may need to:
   - Ask them more in-depth questions to obtain more accurate conclusions and diagnostic opinions;
   - Integrate the responses from agents in different fields and attempt to derive more accurate conclusions and diagnostic opinions;
-  - Consult agents in fields you hadn't previously considered to try to derive more accurate conclusions and diagnostic opinions;  
+  - Consult agents in fields you hadn't previously considered to try to derive more accurate conclusions and diagnostic opinions;
   - This process may need to be repeated several times until you can arrive at a basically accurate diagnostic opinion. However, **do not repeat it too many times, as this will cause confusion in your memory.**;
 - Finally, you need to summarize all the responses and information obtained above. Respond to the outpatient agent with an accurate diagnostic report.
 
 #### Tools
 
 **You should make good use of the provided tools to discover agents within the network.** You can also use the tools to search for information on the internet to assist your diagnosis. However, for specific conditions, if there are corresponding agents within the network, your first choice should be to request assistance from expert agents, as they have more extensive experience. If you find that there are no such experts within the network, you can try searching for them.
+
+#### IMAGES AND FILES
+
+- As a agent in the network, you may communicate with other agents using files (such as images).
+- To avoid outputing bytes directly, each time you want to send a file (an image) to other agent, you are supposed to use its **ID in the file system**. And you should pass this ID to him as well. For details, you can read instructions of the tool `agent_send_message`.
 """
 
 
-class SpecialistHostExecutor(ExecutorBase):
-    async def execute(self, context: RequestContext, event_queue: EventQueue) -> None:
-        task = context.current_task
-        if not task:
-            task = new_task(context.message)
-            await event_queue.enqueue_event(task)
-            await self._post_task_start()
-
-        transport = PythonStdioTransport(
-            script_path='/home/yan2u/learn_a2a/net_simulator/mcp/agent_service.py',
-            args=['-i', self.agent_id, '-r', 'agent'],
-        )
-
-        messages = self.task_messages.get(
-            task.id, [{'role': 'system', 'content': SPECIALIST_HOST_PROMPT}])
-
-        user_input = context.get_user_input(delimiter='\n')
-        self.logger.info(f'User input: {user_input}')
-        updater = TaskUpdater(event_queue, task.id, task.contextId)
-
-        messages.append({
-            'role': 'user',
-            'content': user_input
-        })
-
-        await updater.start_work(new_agent_text_message(
-            text='Starting specialist meeting...',
-            context_id=task.contextId,
-            task_id=task.id
-        ))
-
-        llm = get_llm()
-        try:
-
-            messages, choice = await llm.send_message_mcp(messages, transport)
-            self.task_messages[task.id] = messages
-            self.logger.info(
-                f"Task({task.id}) response: {choice.message.content[:100]}...")
-            await updater.add_artifact(
-                parts=[TextPart(text=choice.message.content)],
-                name='spec_meeting_summary'
-            )
-            await updater.complete()
-            await self._post_task_end()
-        except Exception as e:
-            self.logger.error(f"Task({task.id}) error:")
-            self.logger.error(traceback.format_exc())
-            await updater.failed(
-                new_agent_text_message(
-                    text=f"Unexpected Error: {e}",
-                    task_id=task.id,
-                    context_id=task.contextId,
-                )
-            )
-            await self._post_task_end()
-            return
-
-    async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
-        raise NotImplementedError()
+class SpecialistHostExecutor(GeneralTextExecutor):
+    name = 'specialist host'
+    system_prompt = SPECIALIST_HOST_PROMPT

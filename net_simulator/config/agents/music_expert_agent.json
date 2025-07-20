@@ -1,0 +1,50 @@
+{
+  "port": 8102,
+  "executor": "MusicExpertExecutor",
+  "category": "Tools",
+  "agent_card": {
+    "name": "Music Expert",
+    "description": "A professional music connoisseur agent that can analyze and appreciate music segments, identify musical style characteristics, and provide professional music evaluations and insights. Supports multiple audio format inputs and provides detailed music analysis reports.",
+    "version": "0.1.0",
+    "capabilities": {
+      "streaming": true
+    },
+    "defaultInputModes": [
+      "audio/mp3",
+      "audio/wav"
+    ],
+    "defaultOutputModes": [
+      "text/plain"
+    ],
+    "skills": [
+      {
+        "id": "analyze-music",
+        "name": "Music Analysis and Appreciation",
+        "description": "Provides professional analysis and appreciation of given music segments, including: 1) Musical style identification (classical, jazz, rock, electronic, etc.), 2) Technical characteristics analysis (rhythm, tonality, harmony, arrangement, etc.), 3) Emotional expression analysis (mood, atmosphere, theme), 4) Performance technique evaluation (instrument usage, performance level), 5) Overall artistic value assessment. Delivers professional yet accessible music appreciation reports.",
+        "tags": [
+          "music",
+          "analysis",
+          "appreciation",
+          "audio",
+          "style"
+        ],
+        "inputModes": [
+          "text/plain",
+          "audio/mp3",
+          "audio/wav"
+        ],
+        "outputModes": [
+          "text/plain"
+        ],
+        "examples": [
+          "Analyze the style characteristics and performance techniques of this classical music piece",
+          "Please appreciate the harmonic structure and improvisation of this jazz piece",
+          "Evaluate the arrangement and emotional expression of this rock music"
+        ]
+      }
+    ],
+    "supportsAuthenticatedExtendedCard": false
+  },
+  "expose": true,
+  "visible_to": null
+}

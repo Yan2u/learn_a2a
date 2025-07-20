@@ -24,13 +24,25 @@ export interface ImageContentPart {
 }
 
 /**
+ * @description 多模态消息中的音频部分。
+ * 我们存储音频的URL和相关元数据。
+ */
+export interface AudioContentPart {
+    type: 'audio';
+    audioUrl: string;
+    mediaType: string; // 例如 'audio/wav', 'audio/mp3'
+    duration?: number; // 音频时长（秒）
+    fileName?: string; // 原始文件名
+}
+
+/**
  * @description 一条完整的对话消息。
  * content 设计为数组是为了支持图文混排等多模态输入。
  */
 export interface ChatMessage {
     id: string; // 每条消息的唯一ID，用于React的key
     role: MessageRole;
-    content: (TextContentPart | ImageContentPart)[];
+    content: (TextContentPart | ImageContentPart | AudioContentPart)[];
     annotations?: string[]; // 可选的标注信息，如 "创建了任务T-101"
 }
 

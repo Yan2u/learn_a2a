@@ -5,21 +5,22 @@ from net_simulator.executors.essay_writer_executor import *
 from net_simulator.executors.scholar_executors import *
 from net_simulator.executors.medical_executors import *
 from net_simulator.executors.hospital_executors import *
+from net_simulator.executors.music_expert_executor import *
+from net_simulator.executors.transcriptior_executor import *
 
 
 __all__ = [
     'SearchSummaryExecutor',
     'ExecutorBase',
+    'GeneralTextExecutor',
     'MockExecutor',
     'EssayWriterExecutor',
-    'ScholarExecutorBase',
     'MathmaticsScholarExecutor',
     'PhysicsScholarExecutor',
     'ChemistryScholarExecutor',
     'BiologyScholarExecutor',
     'ComputerScienceScholarExecutor',
     'EconomicsScholarExecutor',
-    'MedicalExecutorBase',
     'InternistExecutor',
     'PediatricianExecutor',
     'DermatologistExecutor',
@@ -31,5 +32,7 @@ __all__ = [
     'SpecialistHostExecutor',
     'MedialRecordExecutor',
     'DrugInventoryExecutor',
-    'ScholarConsultantExecutor'
+    'ScholarConsultantExecutor',
+    'MusicExpertExecutor',
+    'TranscriptorExecutor'
 ]

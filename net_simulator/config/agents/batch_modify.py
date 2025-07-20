@@ -31,10 +31,7 @@ def allocate_ports(config: Path):
 
 def main():
     for config in configs:
-        obj = json.load(open(str(config), 'r', encoding='utf-8'))
-        del obj['visibleTo']
-        obj['visible_to'] = None
-        json.dump(obj, open(str(config), 'w', encoding='utf-8'), indent=2)
+        allocate_ports(config)
 
 
 if __name__ == '__main__':

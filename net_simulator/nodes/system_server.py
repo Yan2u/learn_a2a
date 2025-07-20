@@ -9,8 +9,9 @@ from uuid import uuid4
 
 import fastapi
 import uvicorn
-from a2a.types import (Artifact, Task, TaskArtifactUpdateEvent,
-                       TaskStatusUpdateEvent)
+from a2a.types import (Artifact, Task, TaskArtifactUpdateEvent, TextPart,
+                       TaskStatusUpdateEvent, FilePart, FileWithBytes)
+from a2a.utils import get_text_parts
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastmcp.client.transports import PythonStdioTransport
@@ -26,7 +27,7 @@ from net_simulator.msgs import (AgentInteractionAddRequest,
                                 ResponseT, TextResponse, UserChatRequest,
                                 UserConversationsResponse, UserMessageResponse,
                                 UserRegisterRequest, AgentInteractionDeleteRequest)
-from net_simulator.utils import (OpenAIService, SiliconFlowService, get_config,
+from net_simulator.utils import (OpenAIService, SiliconFlowService, clear_files, create_file, get_config,
                                  get_llm)
 
 CWD = Path(__file__).parent
@@ -75,6 +76,7 @@ def main():
         Lifespan event to start the keep-alive check.
         """
         asyncio.create_task(keep_alive_check())
+        clear_files()
         yield
 
     app = FastAPI(lifespan=lifespan)
@@ -149,7 +151,8 @@ def main():
         for agent_id, agent in graph.items():
             if agent.kind != 'public':
                 continue
-            is_visible = agent.expose and ((agent.visible_to is None) or current_agent.category in agent.visible_to)
+            is_visible = agent.expose and (
+                (agent.visible_to is None) or current_agent.category in agent.visible_to)
             if is_visible or agent.category == current_agent.category:
                 result.append(AgentRegistryInfo(
                     agent_id=agent_id,
@@ -606,6 +609,19 @@ def main():
 
         return TextResponse(content='ok')
 
+    @app.post('/user/unregister_all')
+    def user_unregister_all():
+        """
+        Unregister all users from the server.
+        """
+
+        user_ids = [x for x in graph.keys() if graph[x].kind == 'user']
+        for user_id in user_ids:
+            del graph[user_id]
+            logger.info(f"UserUnregister(id={user_id})")
+        logger.info("All users unregistered.")
+        return TextResponse(content='ok')
+
     @app.post('/user/chat')
     async def chat(request: UserChatRequest):
         """
@@ -631,15 +647,72 @@ def main():
 
         messages = user.conversations[request.conversation_id]
 
+        user_text = '\n'.join(get_text_parts(request.message))
+        user_media = []
+
+        for item in request.message:
+            part = item.root
+            if isinstance(part, TextPart):
+                continue
+            if isinstance(part, FilePart):
+                if not isinstance(part.file, FileWithBytes):
+                    return ErrorResponse(message="Only FileWithBytes is supported.")
+                media_type = part.file.mimeType
+                if (not media_type) or (media_type not in get_config('system.supported_media_types')):
+                    return ErrorResponse(message=f"Unsupported media type: {media_type}")
+                if part.file.mimeType.startswith('image/'):
+                    user_media.append({
+                        'type': 'image_url',
+                        'image_url': {
+                            'url': f"data:{media_type};base64,{part.file.bytes}",
+                        }
+                    })
+                    file_id = create_file(part.file.bytes, part.file.mimeType)
+                    user_media.append({
+                        'type': 'text',
+                        'text': f"The ID of this image in the file system is {file_id}. You can use this ID to communicating with other agents."
+                    })
+                    logger.info(
+                        f"Image(type={part.file.mimeType}, size={len(part.file.bytes)}, id={file_id}) added to chat message.")
+                elif part.file.mimeType.startswith('audio/'):
+                    user_media.append({
+                        'type': 'input_audio',
+                        'input_audio': {
+                            'data': part.file.bytes,
+                            'format': part.file.mimeType.split('/')[1],
+                        }
+                    })
+                    file_id = create_file(part.file.bytes, part.file.mimeType)
+                    user_media.append({
+                        'type': 'text',
+                        'text': f"The ID of this video in the file system is {file_id}. You can use this ID to communicating with other agents."
+                    })
+                    logger.info(
+                        f"Audeo(type={part.file.mimeType}, size={len(part.file.bytes)}, id={file_id}) added to chat message.")
+            else:
+                return ErrorResponse(message=f"Unsupported part type: {type(part)}")
+
         try:
             transport = PythonStdioTransport(
                 script_path='/home/yan2u/learn_a2a/net_simulator/mcp/agent_service.py',
                 args=['-i', request.user_id, '-r', 'user'],
             )
-            messages.append({
-                'role': 'user',
-                'content': request.message
-            })
+            if not user_media:
+                messages.append({
+                    'role': 'user',
+                    'content': user_text
+                })
+            else:
+                messages.append({
+                    'role': 'user',
+                    'content': [
+                        {
+                            'type': 'text',
+                            'text': user_text
+                        },
+                        *user_media
+                    ]
+                })
             messages, choice = await llm.send_message_mcp(
                 messages=messages,
                 mcp_url=transport

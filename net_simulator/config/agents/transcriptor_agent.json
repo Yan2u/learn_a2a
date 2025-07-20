@@ -1,0 +1,48 @@
+{
+    "port": 8100,
+    "executor": "TranscriptorExecutor",
+    "category": "Tools",
+    "agent_card": {
+        "name": "Transcriptor",
+        "description": "An agent that transcribes audio files into text. It supports various audio formats and can handle long audio files by splitting them into manageable segments.",
+        "version": "0.1.0",
+        "capabilities": {
+            "streaming": true
+        },
+        "defaultInputModes": [
+            "audio/mpeg",
+            "audio/mp3",
+            "audio/wav"
+        ],
+        "defaultOutputModes": [
+            "text/plain"
+        ],
+        "skills": [
+            {
+                "id": "transcribe-audio",
+                "name": "Transcribe Audio",
+                "description": "Transcribes audio files into text. The agent can handle various audio formats and long audio files by splitting them into segments.",
+                "tags": [
+                    "transcription",
+                    "audio",
+                    "speech-to-text"
+                ],
+                "inputModes": [
+                    "audio/mpeg",
+                    "audio/mp3",
+                    "audio/wav"
+                ],
+                "outputModes": [
+                    "text/plain"
+                ],
+                "examples": [
+                    "Transcribe this audio file into text.",
+                    "Convert the speech in this audio file to text."
+                ]
+            }
+        ],
+        "supportsAuthenticatedExtendedCard": false
+    },
+    "expose": true,
+    "visible_to": null
+}

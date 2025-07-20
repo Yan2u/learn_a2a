@@ -1,6 +1,7 @@
 from typing import List
 from pydantic import BaseModel
 from net_simulator.msgs.core_msgs import ResponseBase
+from a2a.types import Part
 
 
 class UserRegisterRequest(BaseModel):
@@ -27,7 +28,7 @@ class UserChatRequest(BaseModel):
     ID of the conversation to which the message belongs.
     """
 
-    message: str
+    message: List[Part]
     """
     The chat message content sent by the user.
     """

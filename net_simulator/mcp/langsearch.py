@@ -27,6 +27,8 @@ def main():
 
         api_key = get_config('langsearch_api_key')
 
+        print(f"Searching for: {query} with count: {count}")
+
         response = requests.post(
             url='https://api.langsearch.com/v1/web-search',
             json={

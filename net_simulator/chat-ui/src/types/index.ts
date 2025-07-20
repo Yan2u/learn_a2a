@@ -8,7 +8,8 @@ export type {
     ChatMessage,
     MessageRole,
     TextContentPart,
-    ImageContentPart
+    ImageContentPart,
+    AudioContentPart
 } from './conversation';
 
 export type { DialogContextType } from './dialog';
